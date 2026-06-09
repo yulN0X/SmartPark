@@ -1,0 +1,56 @@
+# ─── Secrets / environment ───
+.env
+*.env
+!.env.example
+
+# ─── Python ───
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+ParkirBoss/parkirboss-api/venv/
+
+# ─── Databases (runtime) ───
+*.db
+
+# ─── ML model weights & archives (large; tersedia di Hugging Face) ───
+*.zip
+*.pt
+*.onnx
+models/best_saved_model/
+runs/
+
+# ─── Dataset training besar (1.9 GB; tersedia di Hugging Face) ───
+Indonesian License Plate Dataset/
+
+# ─── Uploads / captured frames (runtime, dibuat otomatis) ───
+uploads/
+
+# ─── Flutter / Dart ───
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+ParkirBoss/parkirboss-app/build/
+ParkirBoss/parkirboss-app/.dart_tool/
+
+# ─── Xcode / iOS ───
+xcuserdata/
+*.xcuserstate
+ParkirBoss/parkirboss-app/ios/Pods/
+ParkirBoss/parkirboss-app/ios/Flutter/ephemeral/
+ParkirBoss/parkirboss-app/ios/Flutter/Flutter.podspec
+
+# ─── OS / editor ───
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# ─── graphify (simpan report & graph, abaikan cache besar) ───
+graphify-out/cache/
+
+# ─── Backup repo git orphan (lihat catatan migrasi) ───
+_orphan_parkirboss_git_backup.tar.gz

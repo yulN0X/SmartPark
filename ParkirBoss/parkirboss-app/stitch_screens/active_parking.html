@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sesi Parkir Aktif - PARKIR BOSS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700;900&amp;family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface-variant": "#494551",
+                        "on-primary-fixed": "#22005d",
+                        "tertiary-fixed": "#ffdf93",
+                        "on-secondary-container": "#645a7d",
+                        "outline-variant": "#cbc4d2",
+                        "on-secondary-fixed": "#1f1635",
+                        "on-primary": "#ffffff",
+                        "background": "#fdf7ff",
+                        "error": "#ba1a1a",
+                        "on-secondary-fixed-variant": "#4b4263",
+                        "on-primary-container": "#e0d2ff",
+                        "outline": "#7a7582",
+                        "surface-container-highest": "#e6e0e9",
+                        "primary-fixed-dim": "#cfbcff",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#4f378a",
+                        "on-error": "#ffffff",
+                        "inverse-surface": "#322f35",
+                        "primary-container": "#6750a4",
+                        "secondary-container": "#e1d4fd",
+                        "surface": "#fdf7ff",
+                        "on-tertiary-fixed": "#241a00",
+                        "on-tertiary-fixed-variant": "#594400",
+                        "on-secondary": "#ffffff",
+                        "on-surface": "#1d1b20",
+                        "surface-container-low": "#f8f2fa",
+                        "surface-container": "#f2ecf4",
+                        "inverse-primary": "#cfbcff",
+                        "primary-fixed": "#e9ddff",
+                        "inverse-on-surface": "#f5eff7",
+                        "surface-dim": "#ded8e0",
+                        "surface-variant": "#e6e0e9",
+                        "surface-container-high": "#ece6ee",
+                        "secondary-fixed": "#e9ddff",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#e7c365",
+                        "on-primary-fixed-variant": "#4f378a",
+                        "tertiary-container": "#c9a74d",
+                        "secondary-fixed-dim": "#cdc0e9",
+                        "secondary": "#63597c",
+                        "surface-tint": "#6750a4",
+                        "on-tertiary-container": "#503d00",
+                        "tertiary": "#765b00",
+                        "surface-bright": "#fdf7ff",
+                        "on-error-container": "#93000a",
+                        "on-background": "#1d1b20"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "gutter": "16px",
+                        "sm": "8px",
+                        "margin": "20px",
+                        "xl": "32px",
+                        "unit": "4px",
+                        "xs": "4px",
+                        "2xl": "48px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Space Grotesk"],
+                        "body-lg": ["Inter"],
+                        "label-lg": ["Space Grotesk"],
+                        "body-sm": ["Inter"],
+                        "headline-xl": ["Space Grotesk"],
+                        "label-sm": ["Space Grotesk"],
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Space Grotesk"],
+                        "headline-md": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", { "lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-lg": ["16px", { "lineHeight": "1.0", "letterSpacing": "0.1em", "fontWeight": "700" }],
+                        "body-sm": ["14px", { "lineHeight": "1.4", "fontWeight": "400" }],
+                        "headline-xl": ["48px", { "lineHeight": "1.0", "fontWeight": "900" }],
+                        "label-sm": ["12px", { "lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.1", "fontWeight": "800" }],
+                        "headline-md": ["24px", { "lineHeight": "1.2", "fontWeight": "700" }]
+                    },
+                    boxShadow: {
+                        'neo': '4px 4px 0px 0px #1a1a1a',
+                        'neo-sm': '2px 2px 0px 0px #1a1a1a',
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .neo-border { border: 4px solid #1d1b20; }
+        .neo-border-thin { border: 3px solid #1d1b20; }
+        .neo-shadow { box-shadow: 4px 4px 0px 0px #1d1b20; }
+        .neo-shadow-active:active { box-shadow: none; transform: translate(4px, 4px); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-md overflow-x-hidden">
+<!-- Top App Bar (Task Focused, No Navigation Clusters) -->
+<header class="bg-primary text-on-primary flex items-center justify-between px-margin h-20 neo-border-thin border-x-0 border-t-0 shadow-neo z-10 sticky top-0">
+<button aria-label="Back" class="w-12 h-12 flex items-center justify-center bg-surface text-on-surface neo-border-thin shadow-neo neo-shadow-active transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">arrow_back</span>
+</button>
+<h1 class="text-headline-md font-headline-md font-black uppercase text-center flex-1 tracking-tight">
+            Sesi Parkir Aktif
+        </h1>
+<div class="w-12 h-12"></div> <!-- Spacer for centering -->
+</header>
+<main class="flex-1 flex flex-col p-gutter gap-lg max-w-md mx-auto w-full">
+<!-- Location Header Section -->
+<section class="bg-tertiary-container text-on-tertiary-container p-lg neo-border shadow-neo relative overflow-hidden">
+<!-- Decorative Accent -->
+<div class="absolute top-0 right-0 p-2 opacity-50">
+<span class="material-symbols-outlined text-4xl">qr_code_scanner</span>
+</div>
+<div class="flex justify-between items-start mb-sm relative z-10">
+<div>
+<h2 class="text-headline-xl font-headline-xl font-black uppercase leading-none mb-2">Central Plaza</h2>
+<p class="text-label-lg font-label-lg bg-surface text-on-surface inline-block px-3 py-2 neo-border-thin shadow-neo-sm uppercase">Lantai A · Slot A3</p>
+</div>
+</div>
+<!-- Active Badge -->
+<div class="inline-flex items-center gap-2 bg-primary-container text-on-primary-container px-4 py-2 neo-border-thin shadow-neo mt-md">
+<span class="w-3 h-3 bg-error rounded-full animate-pulse neo-border-thin"></span>
+<span class="text-label-md font-label-md uppercase tracking-widest">AKTIF</span>
+</div>
+<!-- Vehicle Info Card -->
+<div class="mt-lg bg-surface text-on-surface p-sm neo-border-thin shadow-neo flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="bg-secondary-container p-2 neo-border-thin shadow-neo-sm">
+<span class="material-symbols-outlined text-on-secondary-container" style="font-variation-settings: 'FILL' 1;">directions_car</span>
+</div>
+<div>
+<p class="text-label-sm font-label-sm text-outline uppercase mb-1">Kendaraan</p>
+<p class="font-mono text-xl font-bold tracking-widest uppercase">B 1234 ABC</p>
+</div>
+</div>
+<button aria-label="Update Photo" class="bg-surface-variant p-2 neo-border-thin shadow-neo-sm neo-shadow-active transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">photo_camera</span>
+</button>
+</div>
+</section>
+<!-- Live Metrics Section -->
+<section class="flex flex-col gap-sm">
+<!-- Duration (Massive) -->
+<div class="bg-surface text-on-surface p-lg neo-border shadow-neo text-center flex flex-col items-center justify-center min-h-[140px]">
+<p class="text-label-md font-label-md text-outline uppercase mb-2">Durasi Berjalan</p>
+<p class="font-mono text-5xl font-black tracking-tighter text-primary">01:24:15</p>
+</div>
+<div class="grid grid-cols-2 gap-sm">
+<!-- Cost -->
+<div class="bg-primary text-on-primary p-md neo-border shadow-neo flex flex-col justify-center">
+<p class="text-label-sm font-label-sm text-primary-fixed uppercase mb-1">Estimasi Biaya</p>
+<p class="text-headline-md font-headline-md font-black">Rp 4.200</p>
+</div>
+<!-- Rate -->
+<div class="bg-surface text-on-surface p-md neo-border shadow-neo flex flex-col justify-center">
+<p class="text-label-sm font-label-sm text-outline uppercase mb-1">Tarif</p>
+<p class="text-headline-md font-headline-md font-bold">Rp 3.000<span class="text-body-sm font-body-sm block text-outline">/jam</span></p>
+</div>
+</div>
+</section>
+<!-- Timeline Section -->
+<section class="bg-surface text-on-surface p-lg neo-border shadow-neo flex flex-col gap-md">
+<h3 class="text-label-md font-label-md uppercase border-b-4 border-on-surface pb-2">Garis Waktu</h3>
+<div class="relative pt-4 pb-2">
+<!-- Background Bar -->
+<div class="h-4 w-full bg-surface-variant neo-border-thin"></div>
+<!-- Fill Bar -->
+<div class="absolute top-4 left-0 h-4 bg-tertiary-container neo-border-thin border-r-0" style="width: 40%;"></div>
+<!-- Current Position Dot -->
+<div class="absolute top-2 w-8 h-8 bg-primary-container neo-border-thin shadow-neo rounded-none flex items-center justify-center z-10" style="left: calc(40% - 16px);">
+<div class="w-3 h-3 bg-on-background"></div>
+</div>
+<!-- Labels -->
+<div class="flex justify-between mt-sm">
+<div class="flex flex-col items-start">
+<span class="text-label-sm font-label-sm uppercase">Masuk</span>
+<span class="font-mono font-bold text-sm">10:00</span>
+</div>
+<div class="flex flex-col items-center absolute" style="left: 40%; transform: translateX(-50%);">
+<span class="text-label-sm font-label-sm uppercase text-primary">Sekarang</span>
+</div>
+<div class="flex flex-col items-end text-outline">
+<span class="text-label-sm font-label-sm uppercase">Est. Keluar</span>
+<span class="font-mono font-bold text-sm">--:--</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Actions Section -->
+<section class="flex flex-col gap-gutter mt-auto pt-lg">
+<button class="w-full flex items-center justify-center gap-3 bg-error-container text-on-error-container p-md neo-border shadow-neo neo-shadow-active transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">warning</span>
+<span class="text-label-lg font-label-lg uppercase">Laporkan Masalah</span>
+</button>
+<div class="text-center">
+<a class="inline-flex items-center gap-2 text-label-md font-label-md text-tertiary hover:text-tertiary-container uppercase underline decoration-2 underline-offset-4 transition-colors" href="#">
+<span class="material-symbols-outlined text-sm">receipt_long</span>
+                    Lihat E-Struk Awal
+                </a>
+</div>
+</section>
+</main>
+<!-- Contextual FAB Suppression: No FAB on this focused task view -->
+<!-- Shell Visibility & Relevance: No Bottom Navigation on this focused task view -->
+</body></html>

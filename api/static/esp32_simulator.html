@@ -1,0 +1,1768 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartPark — ESP32-CAM Hardware Simulator</title>
+    <meta name="description" content="Simulasi interaktif hardware ESP32-CAM AI-Thinker untuk SmartPark: visualisasi board, sensor, servo gate, dan alur ANPR secara real-time">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================
+           DESIGN SYSTEM — ESP32-CAM Hardware Simulator
+           ============================================ */
+        :root {
+            --bg-deep: #060a14;
+            --bg-primary: #0c1222;
+            --bg-card: #111b2e;
+            --bg-card-alt: #162038;
+            --bg-elevated: #1c2a48;
+            --border-subtle: rgba(56, 92, 168, 0.2);
+            --border-active: rgba(56, 92, 168, 0.45);
+
+            --text-primary: #eaf0ff;
+            --text-secondary: #8b9cc7;
+            --text-muted: #5a6d99;
+            --text-white: #ffffff;
+
+            --accent-cyan: #00e5ff;
+            --accent-cyan-glow: rgba(0, 229, 255, 0.15);
+            --accent-green: #00e676;
+            --accent-green-glow: rgba(0, 230, 118, 0.15);
+            --accent-amber: #ffab00;
+            --accent-amber-glow: rgba(255, 171, 0, 0.15);
+            --accent-red: #ff5252;
+            --accent-red-glow: rgba(255, 82, 82, 0.15);
+            --accent-purple: #7c4dff;
+            --accent-blue: #448aff;
+            --accent-blue-glow: rgba(68, 138, 255, 0.12);
+
+            --font-main: 'Outfit', system-ui, -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', 'Cascadia Code', monospace;
+
+            --radius: 14px;
+            --radius-sm: 8px;
+            --radius-lg: 20px;
+            --ease: cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        *, *::before, *::after {
+            margin: 0; padding: 0; box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.5;
+        }
+
+        /* Ambient glow background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -30%;
+            right: -10%;
+            width: 60%;
+            height: 60%;
+            background: radial-gradient(ellipse, rgba(0,229,255,0.04) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -20%;
+            left: -10%;
+            width: 50%;
+            height: 50%;
+            background: radial-gradient(ellipse, rgba(124,77,255,0.03) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        /* ============ TOPBAR ============ */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(24px) saturate(1.6);
+            -webkit-backdrop-filter: blur(24px) saturate(1.6);
+            background: rgba(6, 10, 20, 0.82);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 0 2rem;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        .topbar-chip {
+            width: 34px; height: 34px;
+            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            display: grid;
+            place-items: center;
+            font-weight: 800;
+            font-size: 0.7rem;
+            color: #fff;
+            letter-spacing: 0.05em;
+        }
+        .topbar-title {
+            font-size: 1rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--text-white), var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .topbar-tag {
+            font-size: 0.62rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 0.2rem 0.5rem;
+            border-radius: 999px;
+            background: var(--accent-cyan-glow);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(0,229,255,0.2);
+        }
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .pill {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.65rem;
+            border-radius: 999px;
+            font-size: 0.68rem;
+            font-weight: 600;
+        }
+        .pill--online {
+            background: var(--accent-green-glow);
+            color: var(--accent-green);
+            border: 1px solid rgba(0,230,118,0.25);
+        }
+        .pill--offline {
+            background: var(--accent-red-glow);
+            color: var(--accent-red);
+            border: 1px solid rgba(255,82,82,0.25);
+        }
+        .pill-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: blink-slow 2s ease-in-out infinite;
+        }
+        @keyframes blink-slow { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+        /* ============ LAYOUT ============ */
+        .app-grid {
+            max-width: 1520px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            display: grid;
+            grid-template-columns: 320px 1fr 360px;
+            grid-template-rows: auto 1fr;
+            gap: 1.25rem;
+            min-height: calc(100vh - 56px);
+        }
+
+        /* ============ PANEL BASE ============ */
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            transition: border-color 0.3s var(--ease);
+        }
+        .panel:hover {
+            border-color: var(--border-active);
+        }
+        .panel-head {
+            padding: 0.85rem 1.15rem;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .panel-head h2 {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .panel-body {
+            padding: 1.15rem;
+        }
+
+        /* ============ LEFT: BOARD VISUALIZER ============ */
+        .board-col {
+            grid-column: 1;
+            grid-row: 1 / 3;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+        .board-container {
+            flex: 1;
+        }
+        .board-svg-wrap {
+            width: 100%;
+            aspect-ratio: 0.65;
+            background: linear-gradient(145deg, var(--bg-card), var(--bg-card-alt));
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .board-svg-wrap::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 30% 20%, rgba(0,229,255,0.03), transparent 60%);
+        }
+
+        /* ESP32 Board SVG */
+        .esp-board {
+            width: 100%;
+            max-width: 260px;
+            filter: drop-shadow(0 8px 32px rgba(0,0,0,0.4));
+        }
+
+        /* ============ CENTER: GATE + CAMERA ============ */
+        .center-col {
+            grid-column: 2;
+            grid-row: 1 / 3;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        /* Gate 3D Visual */
+        .gate-scene {
+            perspective: 600px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding: 2rem 1rem 0;
+            min-height: 200px;
+            position: relative;
+        }
+        .gate-3d {
+            width: 280px;
+            height: 180px;
+            position: relative;
+            transform: rotateX(8deg);
+            transform-style: preserve-3d;
+        }
+        .gate-pillar {
+            position: absolute;
+            bottom: 0;
+            width: 18px;
+            height: 140px;
+            border-radius: 6px 6px 0 0;
+            background: linear-gradient(180deg, #4a5568, #2d3748);
+            box-shadow: inset -3px 0 6px rgba(0,0,0,0.3);
+        }
+        .gate-pillar--l { left: 0; }
+        .gate-pillar--r { right: 0; }
+        .gate-pillar-cap {
+            position: absolute;
+            top: -6px;
+            left: -3px;
+            right: -3px;
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #718096, #4a5568);
+        }
+        .gate-bar-pivot {
+            position: absolute;
+            top: 10px;
+            left: 18px;
+            width: calc(100% - 36px);
+            height: 14px;
+            transform-origin: left center;
+            transition: transform 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .gate-bar-pivot.open {
+            transform: rotate(-82deg);
+        }
+        .gate-bar {
+            width: 100%;
+            height: 100%;
+            border-radius: 7px;
+            position: relative;
+            overflow: hidden;
+            transition: background 0.5s;
+        }
+        .gate-bar.closed-state {
+            background: linear-gradient(90deg, #e53e3e, #c53030);
+            box-shadow: 0 3px 16px rgba(229,62,62,0.3);
+        }
+        .gate-bar.open-state {
+            background: linear-gradient(90deg, #38a169, #2f855a);
+            box-shadow: 0 3px 16px rgba(56,161,105,0.3);
+        }
+        .gate-bar::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(90deg, transparent, transparent 16px, rgba(255,255,255,0.12) 16px, rgba(255,255,255,0.12) 32px);
+        }
+        .gate-road {
+            position: absolute;
+            bottom: 0;
+            left: -40px;
+            right: -40px;
+            height: 40px;
+            background: linear-gradient(180deg, #2d3748, #1a202c);
+            border-radius: 0 0 8px 8px;
+        }
+        .gate-road::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 3px;
+            transform: translateY(-50%);
+            background: repeating-linear-gradient(90deg, #ecc94b, #ecc94b 20px, transparent 20px, transparent 40px);
+            opacity: 0.4;
+        }
+        .gate-label-3d {
+            position: absolute;
+            top: -28px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            white-space: nowrap;
+        }
+        .gate-status-big {
+            text-align: center;
+            padding: 0.75rem 0 0;
+        }
+        .gate-status-big .status-text {
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            transition: color 0.3s;
+        }
+        .gate-status-big .status-sub {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 0.1rem;
+        }
+
+        /* Camera Preview */
+        .cam-preview {
+            flex: 1;
+        }
+        .cam-viewport {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #000;
+            border-radius: var(--radius);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .cam-viewport img,
+        .cam-viewport canvas {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .cam-hud-tl {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.6rem;
+            background: rgba(0,0,0,0.72);
+            backdrop-filter: blur(6px);
+            border-radius: var(--radius-sm);
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
+        .cam-hud-tl .hud-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: var(--accent-red);
+            animation: blink-rec 1s ease-in-out infinite;
+        }
+        @keyframes blink-rec { 0%,100%{opacity:1;} 50%{opacity:0.15;} }
+        .cam-hud-tr {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 0.2rem 0.5rem;
+            background: rgba(0,0,0,0.72);
+            backdrop-filter: blur(6px);
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.62rem;
+            color: var(--text-muted);
+        }
+        .cam-hud-br {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            padding: 0.2rem 0.5rem;
+            background: rgba(0,0,0,0.72);
+            backdrop-filter: blur(6px);
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            color: var(--accent-cyan);
+        }
+        .cam-crosshair {
+            position: absolute;
+            inset: 15%;
+            border: 1.5px solid rgba(0,229,255,0.15);
+            border-radius: 6px;
+            pointer-events: none;
+        }
+        .cam-crosshair::before,
+        .cam-crosshair::after {
+            content: '';
+            position: absolute;
+            background: rgba(0,229,255,0.3);
+        }
+        .cam-crosshair::before {
+            top: 50%; left: 0; right: 0;
+            height: 1px;
+            transform: translateY(-50%);
+        }
+        .cam-crosshair::after {
+            left: 50%; top: 0; bottom: 0;
+            width: 1px;
+            transform: translateX(-50%);
+        }
+        .cam-placeholder-content {
+            text-align: center;
+            color: var(--text-muted);
+        }
+        .cam-placeholder-content .ico { font-size: 3rem; margin-bottom: 0.5rem; opacity: 0.4; }
+        .cam-placeholder-content p { font-size: 0.78rem; }
+        .cam-controls {
+            display: flex;
+            gap: 0.6rem;
+            padding: 0.85rem 0 0;
+            flex-wrap: wrap;
+        }
+
+        /* ============ RIGHT: RESULTS + SERIAL ============ */
+        .right-col {
+            grid-column: 3;
+            grid-row: 1 / 3;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            max-height: calc(100vh - 56px - 3rem);
+            overflow-y: auto;
+        }
+
+        /* Sensor telemetry */
+        .telemetry-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.7rem;
+        }
+        .tel-card {
+            background: var(--bg-elevated);
+            border-radius: var(--radius-sm);
+            padding: 0.7rem;
+            border: 1px solid transparent;
+            transition: all 0.3s var(--ease);
+        }
+        .tel-card.active {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 20px var(--accent-cyan-glow);
+        }
+        .tel-card.triggered {
+            border-color: var(--accent-amber);
+            box-shadow: 0 0 20px var(--accent-amber-glow);
+            animation: tel-pulse 0.6s ease;
+        }
+        @keyframes tel-pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+        .tel-label {
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            margin-bottom: 0.3rem;
+        }
+        .tel-value {
+            font-family: var(--font-mono);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-white);
+        }
+        .tel-unit {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .tel-icon {
+            float: right;
+            font-size: 1.2rem;
+            opacity: 0.5;
+        }
+
+        /* Detection results */
+        .res-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.45rem 0;
+            border-bottom: 1px solid rgba(56,92,168,0.1);
+        }
+        .res-row:last-child { border-bottom: none; }
+        .res-key {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .res-val {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-white);
+        }
+        .res-val--plate {
+            font-size: 1rem;
+            padding: 0.25rem 0.7rem;
+            background: var(--bg-elevated);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-subtle);
+            letter-spacing: 0.06em;
+        }
+        .res-val--granted { color: var(--accent-green); }
+        .res-val--denied { color: var(--accent-red); }
+
+        /* Conf bar */
+        .conf-track {
+            width: 70px; height: 5px;
+            background: var(--bg-elevated);
+            border-radius: 3px;
+            overflow: hidden;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 0.4rem;
+        }
+        .conf-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.6s var(--ease);
+        }
+        .conf-fill--hi { background: var(--accent-green); }
+        .conf-fill--md { background: var(--accent-amber); }
+        .conf-fill--lo { background: var(--accent-red); }
+
+        /* Serial monitor */
+        .serial-wrap {
+            background: #0a0f1a;
+            border-radius: var(--radius-sm);
+            padding: 0;
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            max-height: 240px;
+            overflow-y: auto;
+            border: 1px solid rgba(56,92,168,0.12);
+        }
+        .serial-line {
+            display: flex;
+            padding: 0.2rem 0.6rem;
+            border-bottom: 1px solid rgba(56,92,168,0.06);
+            line-height: 1.4;
+        }
+        .serial-line:hover {
+            background: rgba(0,229,255,0.03);
+        }
+        .serial-ts {
+            color: var(--text-muted);
+            min-width: 62px;
+            flex-shrink: 0;
+        }
+        .serial-msg {
+            color: var(--accent-green);
+            word-break: break-word;
+        }
+        .serial-msg.err { color: var(--accent-red); }
+        .serial-msg.warn { color: var(--accent-amber); }
+        .serial-msg.info { color: var(--accent-cyan); }
+
+        /* ============ BUTTONS ============ */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.55rem 1rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid transparent;
+            font-family: var(--font-main);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s var(--ease);
+            white-space: nowrap;
+        }
+        .btn:active { transform: scale(0.96); }
+        .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+        .btn--cyan {
+            background: var(--accent-cyan);
+            color: #0a0e1a;
+            box-shadow: 0 2px 16px var(--accent-cyan-glow);
+        }
+        .btn--cyan:hover:not(:disabled) { filter: brightness(1.12); }
+        .btn--green {
+            background: var(--accent-green);
+            color: #0a0e1a;
+            box-shadow: 0 2px 16px var(--accent-green-glow);
+        }
+        .btn--green:hover:not(:disabled) { filter: brightness(1.12); }
+        .btn--amber {
+            background: var(--accent-amber);
+            color: #0a0e1a;
+        }
+        .btn--amber:hover:not(:disabled) { filter: brightness(1.12); }
+        .btn--red {
+            background: var(--accent-red);
+            color: #fff;
+        }
+        .btn--red:hover:not(:disabled) { filter: brightness(1.12); }
+        .btn--ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            border-color: var(--border-subtle);
+        }
+        .btn--ghost:hover:not(:disabled) { background: var(--bg-elevated); color: var(--text-primary); }
+        .btn--lg { padding: 0.7rem 1.5rem; font-size: 0.82rem; }
+
+        .upload-zone {
+            border: 2px dashed var(--border-subtle);
+            border-radius: var(--radius);
+            padding: 0.85rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s var(--ease);
+            margin-top: 0.5rem;
+        }
+        .upload-zone:hover {
+            border-color: var(--accent-cyan);
+            background: var(--accent-cyan-glow);
+        }
+        .upload-zone p { font-size: 0.72rem; color: var(--text-muted); }
+        .upload-zone input[type="file"] { display: none; }
+
+        /* Slider */
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+        .slider-group label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            flex: 1;
+            height: 4px;
+            background: var(--bg-elevated);
+            border-radius: 2px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            cursor: pointer;
+            box-shadow: 0 0 6px var(--accent-cyan-glow);
+        }
+        .slider-val {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: var(--accent-cyan);
+            min-width: 40px;
+            text-align: right;
+        }
+
+        /* Config field */
+        .cfg-row {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 0.6rem;
+        }
+        .cfg-row label {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            min-width: 40px;
+        }
+        .cfg-input {
+            flex: 1;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            padding: 0.4rem 0.65rem;
+            color: var(--text-white);
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+        }
+        .cfg-input:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 2px var(--accent-cyan-glow);
+        }
+
+        /* Step indicators */
+        .flow-steps {
+            display: flex;
+            gap: 0;
+            overflow: hidden;
+            border-radius: var(--radius-sm);
+            background: var(--bg-elevated);
+        }
+        .flow-step {
+            flex: 1;
+            padding: 0.5rem 0.2rem;
+            text-align: center;
+            font-size: 0.58rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-right: 1px solid var(--border-subtle);
+            transition: all 0.3s var(--ease);
+            position: relative;
+        }
+        .flow-step:last-child { border-right: none; }
+        .flow-step .step-icon { font-size: 0.9rem; display: block; margin-bottom: 0.1rem; }
+        .flow-step.active {
+            color: var(--accent-cyan);
+            background: var(--accent-cyan-glow);
+        }
+        .flow-step.done {
+            color: var(--accent-green);
+            background: var(--accent-green-glow);
+        }
+
+        /* Spinner */
+        .spin { 
+            display: inline-block; width: 16px; height: 16px;
+            border: 2.5px solid var(--border-subtle);
+            border-top-color: var(--accent-cyan);
+            border-radius: 50%;
+            animation: rotate 0.6s linear infinite;
+            vertical-align: middle;
+        }
+        @keyframes rotate { to { transform: rotate(360deg); } }
+
+        /* Captured image in results */
+        .captured-thumb {
+            width: 100%;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-subtle);
+            display: none;
+        }
+        .captured-thumb.show { display: block; margin-top: 0.6rem; }
+
+        /* Flash overlay */
+        .flash-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255,255,255,0.7);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 200;
+            transition: opacity 0.08s;
+        }
+        .flash-overlay.fire {
+            opacity: 1;
+            transition: opacity 0.02s;
+        }
+
+        /* Responsive */
+        @media (max-width: 1100px) {
+            .app-grid {
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto;
+            }
+            .board-col { grid-column: 1; grid-row: 1; }
+            .center-col { grid-column: 2; grid-row: 1 / 3; }
+            .right-col { grid-column: 1 / 3; grid-row: 3; max-height: none; }
+        }
+        @media (max-width: 720px) {
+            .app-grid {
+                grid-template-columns: 1fr;
+            }
+            .board-col, .center-col, .right-col {
+                grid-column: 1;
+                grid-row: auto;
+            }
+            .right-col { max-height: none; }
+        }
+
+        /* Vehicle animation */
+        .vehicle-indicator {
+            position: absolute;
+            bottom: 42px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2rem;
+            opacity: 0;
+            transition: all 0.6s var(--ease);
+        }
+        .vehicle-indicator.approaching {
+            opacity: 1;
+            animation: car-approach 1s ease-out;
+        }
+        .vehicle-indicator.passing {
+            animation: car-pass 1.5s ease-in forwards;
+        }
+        @keyframes car-approach {
+            0% { transform: translateX(-50%) scale(0.4); opacity: 0; }
+            100% { transform: translateX(-50%) scale(1); opacity: 1; }
+        }
+        @keyframes car-pass {
+            0% { transform: translateX(-50%) translateY(0); opacity: 1; }
+            100% { transform: translateX(-50%) translateY(-120px); opacity: 0; }
+        }
+        .gate-sensor-zone {
+            position: absolute;
+            bottom: 42px;
+            left: -35px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(0,229,255,0.05);
+            border: 1.5px dashed rgba(0,229,255,0.2);
+            display: grid;
+            place-items: center;
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            transition: all 0.3s;
+        }
+        .gate-sensor-zone.active {
+            background: var(--accent-cyan-glow);
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            box-shadow: 0 0 12px var(--accent-cyan-glow);
+        }
+        .gate-ir-zone {
+            position: absolute;
+            bottom: 42px;
+            right: -35px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(255,171,0,0.05);
+            border: 1.5px dashed rgba(255,171,0,0.2);
+            display: grid;
+            place-items: center;
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            transition: all 0.3s;
+        }
+        .gate-ir-zone.active {
+            background: var(--accent-amber-glow);
+            border-color: var(--accent-amber);
+            color: var(--accent-amber);
+            box-shadow: 0 0 12px var(--accent-amber-glow);
+        }
+
+        /* empty state */
+        .empty-state { text-align: center; padding: 1.5rem 1rem; color: var(--text-muted); }
+        .empty-state .ico { font-size: 1.8rem; opacity: 0.4; margin-bottom: 0.4rem; }
+        .empty-state p { font-size: 0.75rem; }
+    </style>
+</head>
+<body>
+
+<div class="flash-overlay" id="flash-overlay"></div>
+
+<!-- TOPBAR -->
+<nav class="topbar" id="topbar">
+    <div class="topbar-left">
+        <div class="topbar-chip">IoT</div>
+        <span class="topbar-title">ESP32-CAM Hardware Simulator</span>
+        <span class="topbar-tag">SmartPark v2</span>
+    </div>
+    <div class="topbar-right">
+        <div class="pill pill--online" id="api-pill">
+            <span class="pill-dot"></span>
+            <span id="api-pill-text">API Online</span>
+        </div>
+    </div>
+</nav>
+
+<div class="app-grid">
+
+    <!-- ═══════ LEFT: ESP32-CAM BOARD ═══════ -->
+    <div class="board-col">
+        <div class="panel board-container">
+            <div class="panel-head">
+                <h2>🔩 ESP32-CAM AI-Thinker</h2>
+                <span style="font-family:var(--font-mono);font-size:0.6rem;color:var(--text-muted);">AI-Thinker v1</span>
+            </div>
+            <div class="panel-body" style="padding:0.8rem;">
+                <div class="board-svg-wrap">
+                    <!-- Simplified SVG Board Visual -->
+                    <svg class="esp-board" viewBox="0 0 220 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- PCB Base -->
+                        <rect x="10" y="10" width="200" height="320" rx="8" fill="#1a472a" stroke="#2d6a3f" stroke-width="1.5"/>
+                        <!-- Copper traces pattern -->
+                        <line x1="30" y1="80" x2="190" y2="80" stroke="#3d8b56" stroke-width="0.5" opacity="0.3"/>
+                        <line x1="30" y1="120" x2="190" y2="120" stroke="#3d8b56" stroke-width="0.5" opacity="0.3"/>
+                        <line x1="30" y1="200" x2="190" y2="200" stroke="#3d8b56" stroke-width="0.5" opacity="0.3"/>
+                        <line x1="60" y1="40" x2="60" y2="280" stroke="#3d8b56" stroke-width="0.5" opacity="0.3"/>
+                        <line x1="160" y1="40" x2="160" y2="280" stroke="#3d8b56" stroke-width="0.5" opacity="0.3"/>
+
+                        <!-- Camera Module OV2640 -->
+                        <rect x="55" y="20" width="110" height="65" rx="4" fill="#1a1a2e" stroke="#4a4a6a" stroke-width="1"/>
+                        <circle cx="110" cy="48" r="20" fill="#0d0d1a" stroke="#4a4a6a" stroke-width="1"/>
+                        <circle cx="110" cy="48" r="14" fill="#1a1a3a" stroke="#3333aa" stroke-width="0.8"/>
+                        <circle cx="110" cy="48" r="8" fill="#222255"/>
+                        <circle cx="110" cy="48" r="3" fill="#4444cc" id="svg-camera-lens">
+                            <animate attributeName="fill" values="#4444cc;#6666ff;#4444cc" dur="3s" repeatCount="indefinite"/>
+                        </circle>
+                        <text x="110" y="78" text-anchor="middle" fill="#6a6a8a" font-size="6" font-family="monospace">OV2640</text>
+
+                        <!-- Flash LED -->
+                        <rect x="170" y="30" width="16" height="10" rx="2" fill="#333" stroke="#555" stroke-width="0.5" id="svg-flash-body"/>
+                        <rect x="172" y="32" width="12" height="6" rx="1" fill="#444" id="svg-flash-led"/>
+                        <text x="178" y="50" text-anchor="middle" fill="#6a6a8a" font-size="5" font-family="monospace">FLASH</text>
+
+                        <!-- ESP32 Main Chip -->
+                        <rect x="60" y="100" width="100" height="80" rx="3" fill="#2d2d4e" stroke="#5a5a8a" stroke-width="1"/>
+                        <rect x="68" y="108" width="84" height="64" rx="2" fill="#1a1a35"/>
+                        <text x="110" y="135" text-anchor="middle" fill="#8888cc" font-size="7.5" font-weight="bold" font-family="monospace">ESP32-S</text>
+                        <text x="110" y="148" text-anchor="middle" fill="#6666aa" font-size="5.5" font-family="monospace">240MHz Dual</text>
+                        <text x="110" y="160" text-anchor="middle" fill="#6666aa" font-size="5.5" font-family="monospace">4MB PSRAM</text>
+
+                        <!-- GPIO Pins Left -->
+                        <g id="pins-left">
+                            <rect x="2" y="100" width="12" height="6" rx="1" fill="#c0a030"/>
+                            <text x="22" y="106" fill="#8b9cc7" font-size="5" font-family="monospace">GND</text>
+                            <rect x="2" y="115" width="12" height="6" rx="1" fill="#c0a030"/>
+                            <text x="22" y="121" fill="#8b9cc7" font-size="5" font-family="monospace">IO13</text>
+                            <circle cx="48" cy="118" r="3" fill="none" stroke="#ffab00" stroke-width="0.8" id="svg-pin-servo"/>
+                            <rect x="2" y="130" width="12" height="6" rx="1" fill="#c0a030"/>
+                            <text x="22" y="136" fill="#8b9cc7" font-size="5" font-family="monospace">IO15</text>
+                            <circle cx="48" cy="133" r="3" fill="none" stroke="#00e5ff" stroke-width="0.8" id="svg-pin-echo"/>
+                            <rect x="2" y="145" width="12" height="6" rx="1" fill="#c0a030"/>
+                            <text x="22" y="151" fill="#8b9cc7" font-size="5" font-family="monospace">IO14</text>
+                            <circle cx="48" cy="148" r="3" fill="none" stroke="#00e5ff" stroke-width="0.8" id="svg-pin-trig"/>
+                            <rect x="2" y="160" width="12" height="6" rx="1" fill="#c0a030"/>
+                            <text x="22" y="166" fill="#8b9cc7" font-size="5" font-family="monospace">IO2</text>
+                            <circle cx="42" cy="163" r="3" fill="none" stroke="#ff5252" stroke-width="0.8" id="svg-pin-ir"/>
+                        </g>
+                        <!-- GPIO Pins Right -->
+                        <g id="pins-right">
+                            <rect x="206" y="100" width="12" height="6" rx="1" fill="#c0a030"/>
+                            <text x="202" y="106" text-anchor="end" fill="#8b9cc7" font-size="5" font-family="monospace">5V</text>
+                            <rect x="206" y="115" width="12" height="6" rx="1" fill="#c0a030"/>
+                            <text x="202" y="121" text-anchor="end" fill="#8b9cc7" font-size="5" font-family="monospace">GND</text>
+                            <rect x="206" y="130" width="12" height="6" rx="1" fill="#c0a030"/>
+                            <text x="202" y="136" text-anchor="end" fill="#8b9cc7" font-size="5" font-family="monospace">IO4</text>
+                            <rect x="206" y="145" width="12" height="6" rx="1" fill="#c0a030"/>
+                            <text x="202" y="151" text-anchor="end" fill="#8b9cc7" font-size="5" font-family="monospace">3V3</text>
+                        </g>
+
+                        <!-- Onboard LED -->
+                        <circle cx="175" cy="200" r="5" fill="#330000" stroke="#662222" stroke-width="0.8" id="svg-led-onboard"/>
+                        <text x="175" y="214" text-anchor="middle" fill="#6a6a8a" font-size="5" font-family="monospace">LED33</text>
+
+                        <!-- Antenna -->
+                        <rect x="70" y="195" width="80" height="45" rx="3" fill="none" stroke="#5a5a8a" stroke-width="0.8" stroke-dasharray="3,2"/>
+                        <text x="110" y="218" text-anchor="middle" fill="#5a5a8a" font-size="5" font-family="monospace">WiFi ANT</text>
+                        <text x="110" y="228" text-anchor="middle" fill="#4a4a6a" font-size="5" font-family="monospace">2.4GHz</text>
+                        <!-- WiFi icon -->
+                        <path d="M105 206 Q110 200 115 206" stroke="#5a8a5a" stroke-width="0.8" fill="none" id="svg-wifi-1"/>
+                        <path d="M102 210 Q110 202 118 210" stroke="#5a8a5a" stroke-width="0.8" fill="none" id="svg-wifi-2"/>
+                        <path d="M99 214 Q110 204 121 214" stroke="#5a8a5a" stroke-width="0.8" fill="none" id="svg-wifi-3"/>
+
+                        <!-- USB Programmer MB -->
+                        <rect x="55" y="260" width="110" height="55" rx="4" fill="#2a2a3e" stroke="#4a4a6a" stroke-width="1"/>
+                        <rect x="85" y="295" width="50" height="16" rx="3" fill="#444" stroke="#666" stroke-width="0.5"/>
+                        <text x="110" y="305" text-anchor="middle" fill="#888" font-size="5" font-family="monospace">USB</text>
+                        <text x="110" y="277" text-anchor="middle" fill="#7a7aaa" font-size="5.5" font-family="monospace">ESP32-CAM-MB</text>
+
+                        <!-- Pin labels overlay -->
+                        <text x="56" y="118" fill="#ffab00" font-size="4.5" font-family="monospace" opacity="0.7">SERVO</text>
+                        <text x="56" y="133" fill="#00e5ff" font-size="4.5" font-family="monospace" opacity="0.7">ECHO</text>
+                        <text x="56" y="148" fill="#00e5ff" font-size="4.5" font-family="monospace" opacity="0.7">TRIG</text>
+                        <text x="56" y="163" fill="#ff5252" font-size="4.5" font-family="monospace" opacity="0.7">IR</text>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sensor Config / Controls -->
+        <div class="panel">
+            <div class="panel-head">
+                <h2>🎮 Simulasi Sensor</h2>
+            </div>
+            <div class="panel-body">
+                <div class="slider-group" style="margin-bottom:0.8rem;">
+                    <label>HC-SR04 Jarak Simulasi (cm)</label>
+                    <div class="slider-row">
+                        <input type="range" id="sim-distance" min="2" max="200" value="80" oninput="updateSimDistance(this.value)">
+                        <span class="slider-val" id="sim-distance-val">80cm</span>
+                    </div>
+                </div>
+                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                    <button class="btn btn--cyan" onclick="simulateVehicleApproach()" id="btn-sim-vehicle">🚗 Simulasi Kendaraan</button>
+                    <button class="btn btn--ghost" onclick="simulateIRPass()" id="btn-sim-ir">📡 IR Pass</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════ CENTER: GATE + CAMERA ═══════ -->
+    <div class="center-col">
+
+        <!-- Pipeline Flow -->
+        <div class="panel">
+            <div class="panel-body" style="padding:0.7rem;">
+                <div class="flow-steps" id="flow-steps">
+                    <div class="flow-step" id="step-detect"><span class="step-icon">📡</span>Deteksi</div>
+                    <div class="flow-step" id="step-flash"><span class="step-icon">⚡</span>Flash</div>
+                    <div class="flow-step" id="step-capture"><span class="step-icon">📸</span>Capture</div>
+                    <div class="flow-step" id="step-upload"><span class="step-icon">☁️</span>Upload</div>
+                    <div class="flow-step" id="step-anpr"><span class="step-icon">🔍</span>ANPR</div>
+                    <div class="flow-step" id="step-gate"><span class="step-icon">🚧</span>Gate</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gate Visualization -->
+        <div class="panel">
+            <div class="panel-head">
+                <h2>🚧 Gate Entry — GATE-A-IN</h2>
+                <span style="font-family:var(--font-mono);font-size:0.6rem;color:var(--text-muted);" id="gate-id-label">esp32cam-gate-entry-1</span>
+            </div>
+            <div class="panel-body" style="padding:0;">
+                <div class="gate-scene">
+                    <div class="gate-3d">
+                        <span class="gate-label-3d">Palang Gate Masuk</span>
+                        <div class="gate-pillar gate-pillar--l"><div class="gate-pillar-cap"></div></div>
+                        <div class="gate-pillar gate-pillar--r"><div class="gate-pillar-cap"></div></div>
+                        <div class="gate-bar-pivot" id="gate-pivot">
+                            <div class="gate-bar closed-state" id="gate-bar-el"></div>
+                        </div>
+                        <div class="gate-road"></div>
+                        <div class="vehicle-indicator" id="vehicle-indicator">🚗</div>
+                        <div class="gate-sensor-zone" id="sensor-hc" title="HC-SR04 Ultrasonic">HC</div>
+                        <div class="gate-ir-zone" id="sensor-ir" title="IR Obstacle Sensor">IR</div>
+                    </div>
+                </div>
+                <div class="gate-status-big">
+                    <div class="status-text" id="gate-big-status" style="color:var(--text-muted);">Menunggu Kendaraan…</div>
+                    <div class="status-sub" id="gate-big-sub">Sensor HC-SR04 aktif — jarak &gt; 30cm</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Camera View -->
+        <div class="panel cam-preview">
+            <div class="panel-head">
+                <h2>📷 OV2640 Camera Feed</h2>
+                <span style="font-size:0.6rem;color:var(--text-muted);font-family:var(--font-mono);" id="cam-resolution">640×480 JPEG</span>
+            </div>
+            <div class="panel-body">
+                <div class="cam-viewport" id="cam-viewport">
+                    <div class="cam-placeholder-content" id="cam-placeholder">
+                        <div class="ico">📷</div>
+                        <p>Kamera siap — menunggu trigger capture</p>
+                    </div>
+                    <img id="cam-img" src="" alt="Captured" style="display:none;">
+                    <canvas id="cam-canvas" style="display:none;"></canvas>
+                    <div class="cam-hud-tl" id="cam-hud-tl" style="display:none;">
+                        <span class="hud-dot"></span>
+                        <span>CAPTURE — GPIO 4 FLASH</span>
+                    </div>
+                    <div class="cam-hud-tr" id="cam-hud-tr" style="display:none;">VGA 640×480</div>
+                    <div class="cam-crosshair" id="cam-crosshair" style="display:none;"></div>
+                    <div class="cam-hud-br" id="cam-hud-br" style="display:none;"></div>
+                </div>
+                <div class="cam-controls">
+                    <button class="btn btn--green btn--lg" onclick="manualCapture()" id="btn-manual-capture">📸 Manual Capture + ANPR</button>
+                    <button class="btn btn--ghost" onclick="document.getElementById('file-input').click()">📁 Upload Foto</button>
+                    <input type="file" id="file-input" accept="image/*" onchange="handleUpload(event)" style="display:none;">
+                </div>
+
+                <!-- API Config -->
+                <div style="margin-top:0.8rem;padding-top:0.8rem;border-top:1px solid var(--border-subtle);">
+                    <div class="cfg-row">
+                        <label>API</label>
+                        <input type="text" class="cfg-input" id="cfg-api" value="" placeholder="http://localhost:8000" readonly style="cursor:default;opacity:0.7;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════ RIGHT: RESULTS + SERIAL ═══════ -->
+    <div class="right-col">
+
+        <!-- Sensor Telemetry -->
+        <div class="panel">
+            <div class="panel-head">
+                <h2>📊 Telemetri Sensor</h2>
+            </div>
+            <div class="panel-body">
+                <div class="telemetry-grid">
+                    <div class="tel-card" id="tel-ultrasonic">
+                        <span class="tel-icon">📡</span>
+                        <div class="tel-label">HC-SR04</div>
+                        <div class="tel-value" id="tel-dist">80.0</div>
+                        <div class="tel-unit">cm</div>
+                    </div>
+                    <div class="tel-card" id="tel-ir">
+                        <span class="tel-icon">🔴</span>
+                        <div class="tel-label">IR Obstacle</div>
+                        <div class="tel-value" id="tel-ir-val">CLEAR</div>
+                        <div class="tel-unit">GPIO 2</div>
+                    </div>
+                    <div class="tel-card" id="tel-servo">
+                        <span class="tel-icon">⚙️</span>
+                        <div class="tel-label">Servo SG90</div>
+                        <div class="tel-value" id="tel-servo-val">0°</div>
+                        <div class="tel-unit">GPIO 13</div>
+                    </div>
+                    <div class="tel-card" id="tel-flash">
+                        <span class="tel-icon">💡</span>
+                        <div class="tel-label">Flash LED</div>
+                        <div class="tel-value" id="tel-flash-val">OFF</div>
+                        <div class="tel-unit">GPIO 4</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detection Results -->
+        <div class="panel" id="results-panel">
+            <div class="panel-head">
+                <h2>🔍 Hasil Deteksi</h2>
+                <span style="font-family:var(--font-mono);font-size:0.6rem;color:var(--text-muted);" id="res-time">—</span>
+            </div>
+            <div class="panel-body">
+                <div class="empty-state" id="res-empty">
+                    <div class="ico">🔎</div>
+                    <p>Simulasikan kendaraan mendekat atau upload gambar untuk memulai deteksi.</p>
+                </div>
+                <div id="res-content" style="display:none;">
+                    <div class="res-row">
+                        <span class="res-key">Plat Nomor</span>
+                        <span class="res-val res-val--plate" id="r-plate">—</span>
+                    </div>
+                    <div class="res-row">
+                        <span class="res-key">Conf. Deteksi</span>
+                        <span>
+                            <span class="res-val" id="r-detect-pct">—</span>
+                            <span class="conf-track"><span class="conf-fill" id="r-detect-bar" style="width:0"></span></span>
+                        </span>
+                    </div>
+                    <div class="res-row">
+                        <span class="res-key">Conf. OCR</span>
+                        <span>
+                            <span class="res-val" id="r-ocr-pct">—</span>
+                            <span class="conf-track"><span class="conf-fill" id="r-ocr-bar" style="width:0"></span></span>
+                        </span>
+                    </div>
+                    <div class="res-row">
+                        <span class="res-key">Warna</span>
+                        <span class="res-val" id="r-color">—</span>
+                    </div>
+                    <div class="res-row">
+                        <span class="res-key">Keputusan</span>
+                        <span class="res-val" id="r-decision">—</span>
+                    </div>
+                    <div class="res-row">
+                        <span class="res-key">Aksi Firmware</span>
+                        <span class="res-val" id="r-action" style="font-size:0.68rem;font-family:var(--font-main);">—</span>
+                    </div>
+                    <img class="captured-thumb" id="captured-thumb" alt="Processed">
+                </div>
+            </div>
+        </div>
+
+        <!-- Serial Monitor -->
+        <div class="panel">
+            <div class="panel-head">
+                <h2>💻 Serial Monitor (115200 baud)</h2>
+                <button class="btn btn--ghost" style="padding:0.2rem 0.5rem;font-size:0.6rem;" onclick="clearSerial()">Clear</button>
+            </div>
+            <div class="panel-body" style="padding:0.6rem;">
+                <div class="serial-wrap" id="serial-wrap"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ==============================================
+   ESP32-CAM Hardware Simulator — Core Logic
+   ============================================== */
+
+const API_BASE = window.location.origin;
+let isProcessing = false;
+let currentDistance = 80;
+let gateIsOpen = false;
+let gateOpenedAt = 0;
+
+// Set API config on load
+document.getElementById('cfg-api').value = API_BASE;
+
+/* ---------- SERIAL MONITOR ---------- */
+function serialPrint(msg, type = '') {
+    const wrap = document.getElementById('serial-wrap');
+    const now = new Date();
+    const ts = now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    const line = document.createElement('div');
+    line.className = 'serial-line';
+    line.innerHTML = `<span class="serial-ts">${ts}</span><span class="serial-msg ${type}">${escapeHtml(msg)}</span>`;
+    wrap.appendChild(line);
+    wrap.scrollTop = wrap.scrollHeight;
+    while (wrap.children.length > 80) wrap.removeChild(wrap.firstChild);
+}
+function clearSerial() {
+    document.getElementById('serial-wrap').innerHTML = '';
+    serialPrint('Serial cleared.', 'info');
+}
+function escapeHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ---------- FLOW STEP INDICATOR ---------- */
+function setStep(stepId, state) {
+    const el = document.getElementById(stepId);
+    el.classList.remove('active','done');
+    if (state) el.classList.add(state);
+}
+function resetSteps() {
+    ['step-detect','step-flash','step-capture','step-upload','step-anpr','step-gate'].forEach(id => setStep(id, ''));
+}
+
+/* ---------- BOARD SVG ANIMATION ---------- */
+function svgFlashOn() {
+    document.getElementById('svg-flash-led').setAttribute('fill','#ffe066');
+    document.getElementById('svg-flash-body').setAttribute('fill','#665500');
+    document.getElementById('svg-flash-led').innerHTML = '<animate attributeName="fill" values="#ffe066;#fff3a0;#ffe066" dur="0.4s" repeatCount="indefinite"/>';
+}
+function svgFlashOff() {
+    const led = document.getElementById('svg-flash-led');
+    led.setAttribute('fill','#444');
+    led.innerHTML = '';
+}
+function svgLedOn() {
+    document.getElementById('svg-led-onboard').setAttribute('fill','#ff3333');
+    document.getElementById('svg-led-onboard').innerHTML = '<animate attributeName="fill" values="#ff3333;#ff6666;#ff3333" dur="0.8s" repeatCount="indefinite"/>';
+}
+function svgLedOff() {
+    const led = document.getElementById('svg-led-onboard');
+    led.setAttribute('fill','#330000');
+    led.innerHTML = '';
+}
+function svgPinPulse(pinId) {
+    const el = document.getElementById(pinId);
+    if (!el) return;
+    el.setAttribute('fill', el.getAttribute('stroke'));
+    setTimeout(() => el.setAttribute('fill','none'), 400);
+}
+
+/* ---------- TELEMETRY ---------- */
+function updateTelDist(val) {
+    document.getElementById('tel-dist').textContent = val.toFixed(1);
+    const card = document.getElementById('tel-ultrasonic');
+    if (val <= 30) {
+        card.classList.add('triggered');
+        setTimeout(() => card.classList.remove('triggered'), 600);
+    }
+}
+function setTelFlash(on) {
+    document.getElementById('tel-flash-val').textContent = on ? 'ON' : 'OFF';
+    document.getElementById('tel-flash-val').style.color = on ? 'var(--accent-amber)' : '';
+    const card = document.getElementById('tel-flash');
+    if (on) card.classList.add('active');
+    else card.classList.remove('active');
+}
+function setTelServo(deg) {
+    document.getElementById('tel-servo-val').textContent = deg + '°';
+}
+function setTelIR(detected) {
+    document.getElementById('tel-ir-val').textContent = detected ? 'BLOCKED' : 'CLEAR';
+    document.getElementById('tel-ir-val').style.color = detected ? 'var(--accent-amber)' : '';
+    const card = document.getElementById('tel-ir');
+    if (detected) card.classList.add('active');
+    else card.classList.remove('active');
+}
+
+/* ---------- SIM DISTANCE SLIDER ---------- */
+function updateSimDistance(val) {
+    currentDistance = parseInt(val);
+    document.getElementById('sim-distance-val').textContent = val + 'cm';
+    updateTelDist(currentDistance);
+    svgPinPulse('svg-pin-trig');
+    svgPinPulse('svg-pin-echo');
+}
+
+/* ---------- GATE CONTROL ---------- */
+function openGate() {
+    const pivot = document.getElementById('gate-pivot');
+    const bar = document.getElementById('gate-bar-el');
+    pivot.classList.add('open');
+    bar.classList.remove('closed-state');
+    bar.classList.add('open-state');
+    gateIsOpen = true;
+    gateOpenedAt = Date.now();
+    setTelServo(90);
+
+    document.getElementById('gate-big-status').textContent = '✅ GATE TERBUKA';
+    document.getElementById('gate-big-status').style.color = 'var(--accent-green)';
+    document.getElementById('gate-big-sub').textContent = 'Menunggu kendaraan melewati IR sensor…';
+
+    serialPrint('=== GATE OPENING ===', 'info');
+    serialPrint('Servo: 0° → 90° (smooth)', '');
+
+    // Smooth servo log
+    svgPinPulse('svg-pin-servo');
+}
+function closeGate() {
+    const pivot = document.getElementById('gate-pivot');
+    const bar = document.getElementById('gate-bar-el');
+    pivot.classList.remove('open');
+    bar.classList.remove('open-state');
+    bar.classList.add('closed-state');
+    gateIsOpen = false;
+    setTelServo(0);
+
+    document.getElementById('gate-big-status').textContent = 'Menunggu Kendaraan…';
+    document.getElementById('gate-big-status').style.color = 'var(--text-muted)';
+    document.getElementById('gate-big-sub').textContent = 'Sensor HC-SR04 aktif — jarak > 30cm';
+
+    serialPrint('=== GATE CLOSING ===', 'info');
+    serialPrint('Servo: 90° → 0° (smooth)', '');
+    serialPrint('Gate closed. Waiting for next vehicle...\n', '');
+
+    svgPinPulse('svg-pin-servo');
+    document.getElementById('sensor-ir').classList.remove('active');
+    setTelIR(false);
+}
+
+/* ---------- FULL SIMULATION: VEHICLE APPROACH ---------- */
+async function simulateVehicleApproach() {
+    if (isProcessing) return;
+    isProcessing = true;
+    document.getElementById('btn-sim-vehicle').disabled = true;
+
+    resetSteps();
+
+    // 1. Vehicle approaches — distance decreases
+    serialPrint('\n========================================', 'info');
+    serialPrint('  Vehicle Approach Simulation', 'info');
+    serialPrint('========================================\n', 'info');
+
+    const car = document.getElementById('vehicle-indicator');
+    car.className = 'vehicle-indicator approaching';
+
+    // Animate distance decrease
+    const distSlider = document.getElementById('sim-distance');
+    setStep('step-detect', 'active');
+    document.getElementById('sensor-hc').classList.add('active');
+
+    for (let d = 80; d >= 15; d -= 5) {
+        distSlider.value = d;
+        updateSimDistance(d);
+        serialPrint(`Distance: ${d.toFixed(1)} cm`, '');
+        await sleep(120);
+    }
+    distSlider.value = 15;
+    updateSimDistance(15);
+
+    serialPrint('\n>>> Vehicle detected at 15.0 cm', 'warn');
+    setStep('step-detect', 'done');
+
+    await sleep(300);
+
+    // 2. Flash LED ON
+    setStep('step-flash', 'active');
+    svgFlashOn();
+    svgLedOn();
+    setTelFlash(true);
+    serialPrint('Flash LED ON — capturing image...', '');
+
+    // Flash effect
+    const flashEl = document.getElementById('flash-overlay');
+    flashEl.classList.add('fire');
+    await sleep(80);
+    flashEl.classList.remove('fire');
+    await sleep(200);
+    setStep('step-flash', 'done');
+
+    // 3. Capture
+    setStep('step-capture', 'active');
+    serialPrint('Image captured: 640x480 JPEG', '');
+    svgFlashOff();
+    setTelFlash(false);
+    serialPrint('Flash LED OFF', '');
+    setStep('step-capture', 'done');
+
+    await sleep(200);
+
+    // 4. Upload — we check if there's an image to send
+    setStep('step-upload', 'active');
+    const camImg = document.getElementById('cam-img');
+    if (camImg.src && camImg.style.display !== 'none') {
+        serialPrint(`Uploading to ${API_BASE}/pipeline/verify ...`, 'info');
+        await sleep(300);
+        setStep('step-upload', 'done');
+
+        // 5. ANPR
+        setStep('step-anpr', 'active');
+        await processCurrentImage();
+        setStep('step-anpr', 'done');
+    } else {
+        serialPrint('No camera image loaded — upload foto terlebih dahulu!', 'warn');
+        serialPrint('Simulasi tetap menjalankan siklus gate demo...', 'warn');
+        setStep('step-upload', 'done');
+        setStep('step-anpr', 'done');
+        await sleep(300);
+
+        // Demo gate open
+        setStep('step-gate', 'active');
+        openGate();
+
+        // Auto close after 5s
+        await sleep(5000);
+        simulateIRPassInternal();
+        setStep('step-gate', 'done');
+    }
+
+    // Reset distance
+    await sleep(1000);
+    distSlider.value = 80;
+    updateSimDistance(80);
+    car.className = 'vehicle-indicator';
+    document.getElementById('sensor-hc').classList.remove('active');
+
+    isProcessing = false;
+    document.getElementById('btn-sim-vehicle').disabled = false;
+    svgLedOff();
+}
+
+/* ---------- IR PASS SIMULATION ---------- */
+function simulateIRPass() {
+    if (!gateIsOpen) {
+        serialPrint('Gate belum terbuka — IR pass tidak berlaku.', 'warn');
+        return;
+    }
+    simulateIRPassInternal();
+}
+function simulateIRPassInternal() {
+    const car = document.getElementById('vehicle-indicator');
+    car.className = 'vehicle-indicator passing';
+    document.getElementById('sensor-ir').classList.add('active');
+    svgPinPulse('svg-pin-ir');
+    setTelIR(true);
+
+    serialPrint('IR sensor triggered — vehicle entering gate...', '');
+
+    setTimeout(() => {
+        serialPrint('IR: Vehicle passed through gate!', '');
+        setTelIR(false);
+        closeGate();
+    }, 1500);
+}
+
+/* ---------- MANUAL CAPTURE + PROCESS ---------- */
+async function manualCapture() {
+    const camImg = document.getElementById('cam-img');
+    if (!camImg.src || camImg.style.display === 'none') {
+        serialPrint('Tidak ada gambar — upload foto terlebih dahulu.', 'err');
+        return;
+    }
+    if (isProcessing) return;
+    isProcessing = true;
+
+    resetSteps();
+    setStep('step-capture', 'active');
+    svgFlashOn();
+    svgLedOn();
+    setTelFlash(true);
+
+    const flashEl = document.getElementById('flash-overlay');
+    flashEl.classList.add('fire');
+    await sleep(80);
+    flashEl.classList.remove('fire');
+
+    serialPrint('Manual capture triggered via serial command.', 'info');
+    serialPrint('Flash LED ON — capturing image...', '');
+    await sleep(200);
+    svgFlashOff();
+    setTelFlash(false);
+    serialPrint('Flash LED OFF', '');
+    setStep('step-capture', 'done');
+
+    setStep('step-upload', 'active');
+    serialPrint(`Uploading to ${API_BASE}/pipeline/verify ...`, 'info');
+    await sleep(200);
+    setStep('step-upload', 'done');
+
+    setStep('step-anpr', 'active');
+    await processCurrentImage();
+    setStep('step-anpr', 'done');
+
+    svgLedOff();
+    isProcessing = false;
+}
+
+/* ---------- FILE UPLOAD ---------- */
+async function handleUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    event.target.value = '';
+
+    serialPrint(`File loaded: ${file.name} (${(file.size/1024).toFixed(1)} KB)`, 'info');
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const camImg = document.getElementById('cam-img');
+        camImg.src = e.target.result;
+        camImg.style.display = 'block';
+        document.getElementById('cam-placeholder').style.display = 'none';
+        document.getElementById('cam-hud-tl').style.display = 'flex';
+        document.getElementById('cam-hud-tr').style.display = 'block';
+        document.getElementById('cam-crosshair').style.display = 'block';
+        document.getElementById('cam-hud-br').style.display = 'block';
+        document.getElementById('cam-hud-br').textContent = file.name;
+    };
+    reader.readAsDataURL(file);
+}
+
+/* ---------- PROCESS CURRENT IMAGE ---------- */
+async function processCurrentImage() {
+    const camImg = document.getElementById('cam-img');
+    if (!camImg.src) return;
+
+    const canvas = document.getElementById('cam-canvas');
+    canvas.width = camImg.naturalWidth || 640;
+    canvas.height = camImg.naturalHeight || 480;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(camImg, 0, 0, canvas.width, canvas.height);
+
+    return new Promise((resolve) => {
+        canvas.toBlob(async (blob) => {
+            if (!blob) {
+                serialPrint('Failed to create blob from canvas.', 'err');
+                resolve();
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', blob, 'esp32_capture.jpg');
+
+            const start = performance.now();
+            try {
+                serialPrint(`POST /pipeline/verify (${(blob.size/1024).toFixed(1)} KB)`, '');
+
+                const res = await fetch(`${API_BASE}/pipeline/verify?confidence=0.25&nearest_only=true`, {
+                    method: 'POST',
+                    body: formData,
+                });
+                const elapsed = (performance.now() - start).toFixed(0);
+
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error(`HTTP ${res.status}: ${errText}`);
+                }
+
+                const data = await res.json();
+                serialPrint(`HTTP 200 — ${elapsed}ms`, 'info');
+                displayResults(data, canvas.toDataURL('image/jpeg', 0.85));
+            } catch (e) {
+                serialPrint(`API Error: ${e.message}`, 'err');
+                handleDenied();
+            }
+            resolve();
+        }, 'image/jpeg', 0.9);
+    });
+}
+
+/* ---------- DISPLAY RESULTS ---------- */
+function displayResults(data, thumbUrl) {
+    document.getElementById('res-empty').style.display = 'none';
+    document.getElementById('res-content').style.display = 'block';
+
+    const time = data.processing_time_ms || 0;
+    document.getElementById('res-time').textContent = `${time.toFixed(0)}ms`;
+
+    if (!data.results || data.results.length === 0 || !data.results[0].plate_text) {
+        serialPrint('No license plate detected.', 'warn');
+        handleDenied();
+        return;
+    }
+
+    const r = data.results[0];
+    const plate = r.plate_text || '—';
+    const detectConf = r.plate_confidence || 0;
+    const ocrConf = r.ocr_confidence || 0;
+    const color = r.vehicle?.color || 'unknown';
+    const decision = r.access?.decision || 'DENIED';
+    const action = r.access?.action || '—';
+
+    document.getElementById('r-plate').textContent = plate;
+    document.getElementById('r-detect-pct').textContent = (detectConf * 100).toFixed(1) + '%';
+    document.getElementById('r-ocr-pct').textContent = (ocrConf * 100).toFixed(1) + '%';
+    document.getElementById('r-color').textContent = color.charAt(0).toUpperCase() + color.slice(1);
+    document.getElementById('r-decision').textContent = decision;
+    document.getElementById('r-action').textContent = action;
+
+    // Conf bars
+    setConfBar('r-detect-bar', detectConf);
+    setConfBar('r-ocr-bar', ocrConf);
+
+    // Decision styling
+    const decEl = document.getElementById('r-decision');
+    decEl.className = decision.includes('GRANTED') ? 'res-val res-val--granted' : 'res-val res-val--denied';
+
+    // Captured thumb
+    if (thumbUrl) {
+        const thumb = document.getElementById('captured-thumb');
+        thumb.src = thumbUrl;
+        thumb.classList.add('show');
+    }
+
+    // Serial output (mimics firmware)
+    serialPrint(`Action     : ${decision.includes('GRANTED') ? 'OPEN_GATE' : 'KEEP_CLOSED'}`, '');
+    serialPrint(`Plate      : ${plate}`, '');
+    serialPrint(`Confidence : ${(detectConf * 100).toFixed(1)}%`, '');
+    serialPrint(`Decision   : ${decision}`, '');
+
+    // Gate action
+    setStep('step-gate', 'active');
+    if (decision === 'GRANTED' || decision === 'GRANTED_WITH_LOG') {
+        openGate();
+        // Auto close after timeout
+        setTimeout(() => {
+            if (gateIsOpen) {
+                simulateIRPassInternal();
+            }
+            setStep('step-gate', 'done');
+        }, 6000);
+    } else {
+        handleDenied();
+        setStep('step-gate', 'done');
+    }
+}
+
+function handleDenied() {
+    document.getElementById('gate-big-status').textContent = '🚫 AKSES DITOLAK';
+    document.getElementById('gate-big-status').style.color = 'var(--accent-red)';
+    document.getElementById('gate-big-sub').textContent = 'Verifikasi plat tidak memenuhi syarat';
+    serialPrint('=== DENIED/ERROR ===', 'err');
+
+    setTimeout(() => {
+        document.getElementById('gate-big-status').textContent = 'Menunggu Kendaraan…';
+        document.getElementById('gate-big-status').style.color = 'var(--text-muted)';
+        document.getElementById('gate-big-sub').textContent = 'Sensor HC-SR04 aktif — jarak > 30cm';
+    }, 4000);
+}
+
+function setConfBar(barId, val) {
+    const bar = document.getElementById(barId);
+    const pct = Math.min(100, Math.max(0, val * 100));
+    bar.style.width = pct + '%';
+    bar.className = 'conf-fill ' + (pct >= 75 ? 'conf-fill--hi' : pct >= 40 ? 'conf-fill--md' : 'conf-fill--lo');
+}
+
+/* ---------- API HEALTH ---------- */
+async function checkApi() {
+    const pill = document.getElementById('api-pill');
+    const text = document.getElementById('api-pill-text');
+    try {
+        const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(5000) });
+        const data = await res.json();
+        pill.className = 'pill pill--online';
+        const models = [];
+        if (data.anpr_model_loaded) models.push('ANPR');
+        if (data.ocr_engine_loaded) models.push('OCR');
+        text.textContent = `API Online — ${models.join('+') || 'Loading…'}`;
+        serialPrint(`Health: ${JSON.stringify(data)}`, 'info');
+        return true;
+    } catch (e) {
+        pill.className = 'pill pill--offline';
+        text.textContent = 'API Offline';
+        serialPrint(`API unreachable: ${e.message}`, 'err');
+        return false;
+    }
+}
+
+/* ---------- HELPERS ---------- */
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+/* ---------- INIT ---------- */
+document.addEventListener('DOMContentLoaded', () => {
+    serialPrint('========================================', 'info');
+    serialPrint('  SmartPark — Entry Gate Controller', 'info');
+    serialPrint('  ESP32-CAM AI-Thinker (Simulator)', 'info');
+    serialPrint('========================================\n', 'info');
+    serialPrint('Initializing camera...', '');
+    serialPrint('PSRAM found — using VGA resolution', '');
+    serialPrint('Camera OK — OV2640 ready', '');
+    serialPrint('Gate servo initialized (closed)', '');
+
+    setTimeout(() => {
+        serialPrint('Connecting to WiFi...', '');
+        setTimeout(() => {
+            serialPrint('Connected! IP: 192.168.1.xxx (simulated)', '');
+            checkApi();
+            serialPrint('\nWaiting for vehicles...\n', '');
+        }, 600);
+    }, 400);
+
+    setInterval(checkApi, 30000);
+});
+</script>
+
+</body>
+</html>

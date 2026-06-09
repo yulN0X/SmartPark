@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Parkir Boss - Verifikasi Keluar</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700;800;900&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface-variant": "#494551",
+                        "on-primary-fixed": "#22005d",
+                        "tertiary-fixed": "#ffdf93",
+                        "on-secondary-container": "#645a7d",
+                        "outline-variant": "#cbc4d2",
+                        "on-secondary-fixed": "#1f1635",
+                        "on-primary": "#ffffff",
+                        "background": "#fdf7ff",
+                        "error": "#ba1a1a",
+                        "on-secondary-fixed-variant": "#4b4263",
+                        "on-primary-container": "#e0d2ff",
+                        "outline": "#7a7582",
+                        "surface-container-highest": "#e6e0e9",
+                        "primary-fixed-dim": "#cfbcff",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#4f378a",
+                        "on-error": "#ffffff",
+                        "inverse-surface": "#322f35",
+                        "primary-container": "#6750a4",
+                        "secondary-container": "#e1d4fd",
+                        "surface": "#fdf7ff",
+                        "on-tertiary-fixed": "#241a00",
+                        "on-tertiary-fixed-variant": "#594400",
+                        "on-secondary": "#ffffff",
+                        "on-surface": "#1d1b20",
+                        "surface-container-low": "#f8f2fa",
+                        "surface-container": "#f2ecf4",
+                        "inverse-primary": "#cfbcff",
+                        "primary-fixed": "#e9ddff",
+                        "inverse-on-surface": "#f5eff7",
+                        "surface-dim": "#ded8e0",
+                        "surface-variant": "#e6e0e9",
+                        "surface-container-high": "#ece6ee",
+                        "secondary-fixed": "#e9ddff",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#e7c365",
+                        "on-primary-fixed-variant": "#4f378a",
+                        "tertiary-container": "#c9a74d",
+                        "secondary-fixed-dim": "#cdc0e9",
+                        "secondary": "#63597c",
+                        "surface-tint": "#6750a4",
+                        "on-tertiary-container": "#503d00",
+                        "tertiary": "#765b00",
+                        "surface-bright": "#fdf7ff",
+                        "on-error-container": "#93000a",
+                        "on-background": "#1d1b20"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "gutter": "16px",
+                        "sm": "8px",
+                        "margin": "20px",
+                        "xl": "32px",
+                        "unit": "4px",
+                        "xs": "4px",
+                        "2xl": "48px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Space Grotesk"],
+                        "body-lg": ["Inter"],
+                        "label-lg": ["Space Grotesk"],
+                        "body-sm": ["Inter"],
+                        "headline-xl": ["Space Grotesk"],
+                        "label-sm": ["Space Grotesk"],
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Space Grotesk"],
+                        "headline-md": ["Space Grotesk"],
+                        "mono": ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", "monospace"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", { "lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-lg": ["16px", { "lineHeight": "1.0", "letterSpacing": "0.1em", "fontWeight": "700" }],
+                        "body-sm": ["14px", { "lineHeight": "1.4", "fontWeight": "400" }],
+                        "headline-xl": ["48px", { "lineHeight": "1.0", "fontWeight": "900" }],
+                        "label-sm": ["12px", { "lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.1", "fontWeight": "800" }],
+                        "headline-md": ["24px", { "lineHeight": "1.2", "fontWeight": "700" }]
+                    },
+                    "boxShadow": {
+                        "brutal": "4px 4px 0px 0px #1d1b20",
+                        "brutal-sm": "2px 2px 0px 0px #1d1b20"
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #fdf7ff;
+            color: #1d1b20;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="flex flex-col min-h-screen relative pb-28">
+<!-- TopAppBar (Custom Transactional) -->
+<header class="bg-primary text-on-primary border-b-4 border-on-background flex justify-between items-center w-full px-margin h-20 shadow-brutal z-10 relative">
+<button class="flex items-center justify-center p-sm hover:translate-x-1 hover:translate-y-1 transition-transform active:translate-x-1 active:translate-y-1">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">arrow_back</span>
+</button>
+<h1 class="text-headline-md font-headline-md font-black uppercase tracking-tight">VERIFIKASI KELUAR</h1>
+<button class="flex items-center justify-center p-sm hover:translate-x-1 hover:translate-y-1 transition-transform active:translate-x-1 active:translate-y-1">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">photo_camera</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col gap-lg p-margin overflow-y-auto">
+<!-- 1. Plate Verification Card -->
+<section class="bg-surface border-[3px] border-on-background shadow-brutal p-gutter relative overflow-hidden flex flex-col items-center gap-md">
+<!-- Corner Markers -->
+<div class="absolute top-0 left-0 w-4 h-4 border-b-[3px] border-r-[3px] border-on-background"></div>
+<div class="absolute top-0 right-0 w-4 h-4 border-b-[3px] border-l-[3px] border-on-background"></div>
+<div class="absolute bottom-0 left-0 w-4 h-4 border-t-[3px] border-r-[3px] border-on-background"></div>
+<div class="absolute bottom-0 right-0 w-4 h-4 border-t-[3px] border-l-[3px] border-on-background"></div>
+<div class="border-[3px] border-dashed border-on-background p-md w-full text-center bg-surface-variant flex flex-col items-center justify-center gap-sm">
+<p class="font-mono text-4xl font-black tracking-[0.2em] text-on-background">B 1234 ABC</p>
+<div class="bg-primary-container text-on-primary-container border-[3px] border-on-background shadow-brutal-sm px-md py-xs flex items-center gap-xs inline-flex">
+<span class="material-symbols-outlined text-label-md" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-label-md font-label-md uppercase">Plat Terverifikasi</span>
+</div>
+</div>
+</section>
+<!-- 2. Session Summary Card -->
+<section class="bg-surface-variant border-[3px] border-on-background shadow-brutal flex flex-col">
+<div class="border-b-[3px] border-on-background bg-primary text-on-primary p-sm px-md">
+<h2 class="text-label-lg font-label-lg uppercase">Ringkasan Sesi</h2>
+</div>
+<div class="p-md flex flex-col gap-md">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 bg-primary rounded-full border-[3px] border-on-background flex items-center justify-center text-on-primary shadow-brutal-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">location_on</span>
+</div>
+<div>
+<p class="text-label-sm font-label-sm text-outline uppercase">Lokasi</p>
+<p class="text-body-md font-body-md font-bold">Central Plaza · Slot A3</p>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 bg-tertiary-container rounded-full border-[3px] border-on-background flex items-center justify-center text-on-tertiary-container shadow-brutal-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">login</span>
+</div>
+<div>
+<p class="text-label-sm font-label-sm text-outline uppercase">Masuk</p>
+<p class="text-body-md font-body-md font-bold">10:00 WIB</p>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 bg-error rounded-full border-[3px] border-on-background flex items-center justify-center text-on-error shadow-brutal-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">logout</span>
+</div>
+<div>
+<p class="text-label-sm font-label-sm text-outline uppercase">Keluar</p>
+<p class="text-body-md font-body-md font-bold">11:28 WIB</p>
+</div>
+</div>
+<div class="flex items-center gap-md border-t-[3px] border-dashed border-on-background pt-sm mt-xs">
+<div class="w-10 h-10 bg-surface rounded-full border-[3px] border-on-background flex items-center justify-center text-on-background shadow-brutal-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">timer</span>
+</div>
+<div>
+<p class="text-label-sm font-label-sm text-outline uppercase">Durasi Total</p>
+<p class="text-headline-md font-headline-md font-black">1j 28m</p>
+</div>
+</div>
+</div>
+</section>
+<!-- 3. Cost Breakdown Card -->
+<section class="bg-surface border-[3px] border-on-background shadow-brutal flex flex-col relative pt-8">
+<div class="absolute top-[-16px] left-md bg-primary text-on-primary border-[3px] border-on-background px-md py-sm shadow-brutal-sm">
+<h3 class="text-label-md font-label-md uppercase">Rincian Biaya</h3>
+</div>
+<div class="p-md flex flex-col gap-sm">
+<div class="flex justify-between items-center text-body-md font-body-md font-bold">
+<span>Parkir (Rp 3.000/jam)</span>
+<span>Rp 6.000</span>
+</div>
+<div class="flex justify-between items-center text-body-md font-body-md font-bold bg-primary-container text-on-primary-container p-sm border-[3px] border-on-background">
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-sm">local_offer</span> Diskon 20%</span>
+<span>-Rp 1.200</span>
+</div>
+<div class="border-t-[3px] border-on-background mt-sm pt-sm flex justify-between items-center">
+<span class="text-label-lg font-label-lg uppercase">Total Bayar</span>
+<span class="text-secondary text-2xl font-black font-headline-md">Rp 4.800</span>
+</div>
+</div>
+</section>
+<!-- 4. Payment Method Grid -->
+<section class="flex flex-col gap-sm">
+<h4 class="text-label-md font-label-md uppercase text-on-background">Metode Pembayaran</h4>
+<div class="grid grid-cols-3 gap-sm">
+<!-- Selected Method -->
+<button class="bg-tertiary-container border-[3px] border-on-background shadow-brutal flex flex-col items-center justify-center p-md gap-sm hover:translate-x-1 hover:translate-y-1 active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all relative">
+<span class="material-symbols-outlined text-on-tertiary-container text-3xl" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+<span class="text-label-sm font-label-sm uppercase text-on-tertiary-container">E-Wallet</span>
+<div class="absolute top-1 right-1 w-3 h-3 bg-tertiary rounded-full border-2 border-on-background"></div>
+</button>
+<!-- Unselected Methods -->
+<button class="bg-surface border-[3px] border-on-background shadow-brutal flex flex-col items-center justify-center p-md gap-sm hover:translate-x-1 hover:translate-y-1 active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all grayscale hover:grayscale-0">
+<span class="material-symbols-outlined text-on-background text-3xl" style="font-variation-settings: 'FILL' 1;">qr_code_scanner</span>
+<span class="text-label-sm font-label-sm uppercase text-on-background">QRIS</span>
+</button>
+<button class="bg-surface border-[3px] border-on-background shadow-brutal flex flex-col items-center justify-center p-md gap-sm hover:translate-x-1 hover:translate-y-1 active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all grayscale hover:grayscale-0">
+<span class="material-symbols-outlined text-on-background text-3xl" style="font-variation-settings: 'FILL' 1;">payments</span>
+<span class="text-label-sm font-label-sm uppercase text-on-background">Tunai</span>
+</button>
+</div>
+</section>
+</main>
+<!-- Fixed CTA Bottom Bar (No Nav Shell) -->
+<div class="fixed bottom-0 left-0 w-full bg-surface border-t-[4px] border-on-background p-md z-50">
+<button class="w-full bg-primary-container text-on-primary-container border-[4px] border-on-background shadow-brutal py-md px-lg flex justify-between items-center hover:bg-primary hover:text-on-primary active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all">
+<span class="text-headline-md font-headline-md font-black uppercase tracking-widest">Bayar Sekarang</span>
+<span class="bg-tertiary text-on-tertiary border-[3px] border-on-background px-md py-sm text-label-lg font-label-lg shadow-brutal-sm">Rp 4.800</span>
+</button>
+</div>
+</body></html>

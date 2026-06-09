@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Parkir Boss - Slot Map</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 700;
+        }
+        /* Hide scrollbar for tabs */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "outline-variant": "#cbc4d2",
+                    "surface-bright": "#fdf7ff",
+                    "on-tertiary-fixed": "#241a00",
+                    "error-container": "#ffdad6",
+                    "surface-container-highest": "#e6e0e9",
+                    "on-secondary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "surface-dim": "#ded8e0",
+                    "on-primary-fixed-variant": "#4f378a",
+                    "tertiary-fixed": "#ffdf93",
+                    "primary-fixed": "#e9ddff",
+                    "secondary": "#63597c",
+                    "secondary-container": "#e1d4fd",
+                    "on-background": "#1d1b20",
+                    "inverse-on-surface": "#f5eff7",
+                    "inverse-primary": "#cfbcff",
+                    "outline": "#7a7582",
+                    "surface-tint": "#6750a4",
+                    "surface-container-high": "#ece6ee",
+                    "primary-fixed-dim": "#cfbcff",
+                    "tertiary-fixed-dim": "#e7c365",
+                    "primary-container": "#6750a4",
+                    "surface-variant": "#e6e0e9",
+                    "surface-container": "#f2ecf4",
+                    "on-secondary-fixed-variant": "#4b4263",
+                    "on-secondary-fixed": "#1f1635",
+                    "secondary-fixed": "#e9ddff",
+                    "on-tertiary-fixed-variant": "#594400",
+                    "surface-container-low": "#f8f2fa",
+                    "primary": "#4f378a",
+                    "on-surface-variant": "#494551",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary-container": "#645a7d",
+                    "tertiary-container": "#c9a74d",
+                    "secondary-fixed-dim": "#cdc0e9",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary-container": "#503d00",
+                    "on-primary-container": "#e0d2ff",
+                    "on-primary-fixed": "#22005d",
+                    "background": "#fdf7ff",
+                    "inverse-surface": "#322f35",
+                    "surface": "#fdf7ff",
+                    "tertiary": "#765b00",
+                    "on-error-container": "#93000a",
+                    "on-surface": "#1d1b20",
+                    "on-primary": "#ffffff",
+                    "on-error": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "sm": "8px",
+                    "2xl": "48px",
+                    "margin": "20px",
+                    "xs": "4px",
+                    "xl": "32px",
+                    "gutter": "16px",
+                    "unit": "4px",
+                    "lg": "24px",
+                    "md": "16px"
+            },
+            "fontFamily": {
+                    "label-lg": ["Space Grotesk"],
+                    "headline-lg": ["Space Grotesk"],
+                    "body-md": ["Inter"],
+                    "label-sm": ["Space Grotesk"],
+                    "body-lg": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "headline-xl": ["Space Grotesk"],
+                    "label-md": ["Space Grotesk"],
+                    "headline-md": ["Space Grotesk"]
+            },
+            "fontSize": {
+                    "label-lg": ["16px", {"lineHeight": "1.0", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.1", "fontWeight": "800"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "body-sm": ["14px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                    "headline-xl": ["48px", {"lineHeight": "1.0", "fontWeight": "900"}],
+                    "label-md": ["14px", {"lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "1.2", "fontWeight": "700"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-background font-body-md min-h-screen relative pb-48">
+<!-- TopAppBar -->
+<header class="bg-surface border-b-[4px] border-on-background flex justify-between items-center w-full px-margin h-20 fixed top-0 z-50">
+<div class="w-10 h-10 border-[3px] border-on-background bg-surface-variant overflow-hidden shadow-[2px_2px_0px_0px_#1d1b20]">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="A close-up portrait of a professional individual looking confidently at the camera. The setting implies an urban, modern environment. The lighting is high-key and flattering, casting soft shadows that highlight structural facial features. The overall aesthetic feels bold, modern, and aligned with a high-contrast industrial tech identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsLCtaRsFqB3gZQANG7FGzEDqlc51RbM7CsW4MooyqiiH43ylOawbSw2oMaYfTrLV_ppwgsTSDxulLWG03dEpkpWdGfPHQXL17QgPiQ5UgoXwbnKHqHok1577j7v3ZXchdrcWEy7JmpiYoUp852-WphZAEXux8atcwmLWc5yq-nGP0pXqGpjZHmND5ol_JJP7-_7BmbL2Ox1LDr01EAnIpiMEmf3crv_C8Pb8RXDHpGlHfGDPpnHMGqGtC8x3575TG2-LgfQQyyoMw"/>
+</div>
+<h1 class="italic uppercase text-headline-md font-headline-md font-black text-tertiary tracking-tight">PARKIR BOSS</h1>
+<div class="w-10 h-10 border-[3px] border-on-background flex items-center justify-center bg-surface-container shadow-[2px_2px_0px_0px_#1d1b20]">
+<span class="material-symbols-outlined text-on-background" data-icon="notifications">notifications</span>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="pt-24 px-margin">
+<!-- Header Info -->
+<div class="mb-6 border-[4px] border-on-background p-4 bg-primary-fixed shadow-[4px_4px_0px_0px_#1d1b20]">
+<h2 class="text-headline-md font-headline-md uppercase mb-2">Pilih Slot Parkir</h2>
+<div class="flex items-center gap-2 text-on-background border-t-[3px] border-on-background pt-2">
+<span class="material-symbols-outlined text-[18px]">location_on</span>
+<p class="text-label-md font-label-md uppercase">Central Plaza · 24 slot tersedia</p>
+</div>
+</div>
+<!-- Floor Tabs -->
+<div class="flex gap-4 overflow-x-auto no-scrollbar mb-8 pb-2 border-b-[3px] border-on-background">
+<button class="bg-tertiary text-on-tertiary border-[3px] border-on-background px-6 py-3 text-label-md font-label-md uppercase shadow-[4px_4px_0px_0px_#1d1b20] -translate-y-1">
+                Lantai A
+            </button>
+<button class="bg-surface text-on-surface border-[3px] border-on-background px-6 py-3 text-label-md font-label-md uppercase hover:bg-surface-variant transition-colors">
+                Lantai B
+            </button>
+<button class="bg-surface text-on-surface border-[3px] border-on-background px-6 py-3 text-label-md font-label-md uppercase hover:bg-surface-variant transition-colors">
+                Lantai C
+            </button>
+</div>
+<!-- Parking Grid (5 Columns) -->
+<div class="grid grid-cols-5 gap-3 mb-12">
+<!-- Row 1 -->
+<div class="aspect-[2/3] border-[3px] border-on-background bg-surface flex items-center justify-center relative">
+<span class="text-label-md font-label-md">A1</span>
+</div>
+<div class="aspect-[2/3] border-[3px] border-on-background bg-error text-on-error flex items-center justify-center relative">
+<span class="text-label-md font-label-md">A2</span>
+</div>
+<!-- Selected Slot -->
+<div class="aspect-[2/3] border-[3px] border-on-background bg-tertiary text-on-tertiary flex items-center justify-center relative shadow-[4px_4px_0px_0px_#1d1b20] -translate-y-1 z-10 ring-4 ring-tertiary-container">
+<span class="text-label-md font-label-md">A3</span>
+<div class="absolute -top-3 -right-3 bg-secondary text-on-secondary text-[8px] font-bold px-1 py-0.5 border-2 border-on-background shadow-[2px_2px_0px_0px_#1d1b20]">
+                    TERDEKAT
+                </div>
+</div>
+<div class="aspect-[2/3] border-[3px] border-on-background bg-primary-container text-on-primary-container flex items-center justify-center relative">
+<span class="text-label-md font-label-md">A4</span>
+</div>
+<div class="aspect-[2/3] border-[3px] border-on-background bg-surface-variant text-outline flex items-center justify-center relative">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</div>
+<!-- Row 2 -->
+<div class="aspect-[2/3] border-[3px] border-on-background bg-surface flex items-center justify-center relative">
+<span class="text-label-md font-label-md">B1</span>
+</div>
+<div class="aspect-[2/3] border-[3px] border-on-background bg-surface flex items-center justify-center relative">
+<span class="text-label-md font-label-md">B2</span>
+</div>
+<div class="aspect-[2/3] border-[3px] border-on-background bg-error text-on-error flex items-center justify-center relative">
+<span class="text-label-md font-label-md">B3</span>
+</div>
+<div class="col-span-2 row-span-2 border-[3px] border-on-background bg-surface-variant flex items-center justify-center relative overflow-hidden">
+<div class="absolute inset-0 opacity-10" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, #1d1b20 10px, #1d1b20 20px);"></div>
+<span class="text-label-md font-label-md bg-surface border-2 border-on-background px-2 py-1 z-10">JALUR KELUAR</span>
+</div>
+<!-- Row 3 -->
+<div class="aspect-[2/3] border-[3px] border-on-background bg-primary-container text-on-primary-container flex items-center justify-center relative">
+<span class="text-label-md font-label-md">C1</span>
+</div>
+<div class="aspect-[2/3] border-[3px] border-on-background bg-surface flex items-center justify-center relative">
+<span class="text-label-md font-label-md">C2</span>
+</div>
+<div class="aspect-[2/3] border-[3px] border-on-background bg-surface flex items-center justify-center relative">
+<span class="text-label-md font-label-md">C3</span>
+</div>
+</div>
+</main>
+<!-- Bottom Sheet (Selected Slot Action) -->
+<div class="fixed bottom-20 left-0 w-full bg-surface border-t-[4px] border-on-background z-40 shadow-[0px_-8px_0px_0px_#1d1b20] p-margin">
+<div class="flex justify-between items-start mb-4">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<h3 class="text-headline-lg font-headline-lg uppercase text-on-background">SLOT A3</h3>
+<span class="bg-surface text-on-background border-[3px] border-on-background px-2 py-1 text-label-sm font-label-sm uppercase">TERSEDIA</span>
+</div>
+<p class="text-body-md font-body-md text-on-surface-variant">Lantai A · 12m dari Gate A</p>
+</div>
+<div class="w-12 h-12 border-[3px] border-on-background bg-tertiary-container flex items-center justify-center shadow-[4px_4px_0px_0px_#1d1b20]">
+<span class="material-symbols-outlined text-on-tertiary-container">directions_car</span>
+</div>
+</div>
+<button class="w-full bg-tertiary text-on-tertiary border-[4px] border-on-background py-4 text-label-lg font-label-lg uppercase shadow-[4px_4px_0px_0px_#1d1b20] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#1d1b20] transition-all active:translate-x-[4px] active:translate-y-[4px] active:shadow-none">
+            CLAIM SLOT INI
+        </button>
+</div>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center h-20 px-0 bg-surface border-t-[4px] border-on-background">
+<!-- HOME (Inactive) -->
+<button class="flex flex-col items-center justify-center text-on-surface h-full w-full border-r-[4px] border-on-background hover:bg-surface-variant">
+<span class="material-symbols-outlined mb-1" data-icon="home">home</span>
+<span class="text-label-sm font-label-sm uppercase">HOME</span>
+</button>
+<!-- SLOTS (Active) -->
+<button class="flex flex-col items-center justify-center bg-tertiary text-on-tertiary border-2 border-on-background h-full w-full translate-y-[-4px] shadow-[0px_4px_0px_0px_#1d1b20] z-10 relative">
+<span class="material-symbols-outlined mb-1" data-icon="grid_view">grid_view</span>
+<span class="text-label-sm font-label-sm uppercase">SLOTS</span>
+</button>
+<!-- HISTORY (Inactive) -->
+<button class="flex flex-col items-center justify-center text-on-surface h-full w-full border-l-[4px] border-on-background hover:bg-surface-variant">
+<span class="material-symbols-outlined mb-1" data-icon="history">history</span>
+<span class="text-label-sm font-label-sm uppercase">HISTORY</span>
+</button>
+<!-- PROFILE (Inactive) -->
+<button class="flex flex-col items-center justify-center text-on-surface h-full w-full border-l-[4px] border-on-background hover:bg-surface-variant">
+<span class="material-symbols-outlined mb-1" data-icon="person">person</span>
+<span class="text-label-sm font-label-sm uppercase">PROFILE</span>
+</button>
+</nav>
+</body></html>

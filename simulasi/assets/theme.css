@@ -1,0 +1,207 @@
+/* ============================================================
+   SmartPark — Simulasi · Design System
+   Token diambil dari app ParkirBoss (app_colors / app_typography /
+   app_constants). Gaya: Neo-Brutalist (border tebal, sudut tajam,
+   drop shadow keras), warna ungu, font Space Grotesk + Inter.
+   ============================================================ */
+
+:root {
+  /* ── Primary ──────────────────────────────── */
+  --primary: #4F378A;
+  --on-primary: #FFFFFF;
+  --primary-container: #6750A4;
+  --on-primary-container: #E0D2FF;
+  --primary-fixed: #E9DDFF;
+  --primary-fixed-dim: #CFBCFF;
+
+  /* ── Secondary / Tertiary ─────────────────── */
+  --secondary: #63597C;
+  --secondary-container: #E1D4FD;
+  --tertiary: #765B00;
+  --tertiary-container: #C9A74D;
+  --tertiary-fixed: #FFDF93;
+
+  /* ── Surface / Background ─────────────────── */
+  --surface: #FDF7FF;
+  --on-surface: #1D1B20;
+  --surface-variant: #E6E0E9;
+  --on-surface-variant: #494551;
+  --surface-container-low: #F8F2FA;
+  --surface-container: #F2ECF4;
+  --surface-container-high: #ECE6EE;
+  --surface-container-highest: #E6E0E9;
+  --background: #FDF7FF;
+
+  /* ── Semantic ─────────────────────────────── */
+  --error: #BA1A1A;
+  --error-container: #FFDAD6;
+  --on-error-container: #93000A;
+  --success: #1F7A4D;
+  --success-container: #B6F2D2;
+  --on-success-container: #00391E;
+  --warning: #8A5A00;
+  --warning-container: #FFDDA8;
+
+  /* ── Outline (ink for neo-brutalism) ──────── */
+  --ink: #1D1B20;
+  --outline: #7A7582;
+  --outline-variant: #CBC4D2;
+
+  /* ── Fonts ────────────────────────────────── */
+  --font-head: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* ── Spacing ──────────────────────────────── */
+  --xs: 4px;  --sm: 8px;  --md: 12px; --lg: 16px;
+  --xl: 24px; --xxl: 32px; --xxxl: 48px;
+
+  /* ── Border / Radius / Shadow (brutalist) ── */
+  --border-thin: 2px;
+  --border-med: 3px;
+  --border-thick: 4px;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --shadow-sm: 4px 4px 0 var(--ink);
+  --shadow-md: 6px 6px 0 var(--ink);
+  --shadow-lg: 8px 8px 0 var(--ink);
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--font-body);
+  color: var(--on-surface);
+  background:
+    radial-gradient(circle at 12% 18%, rgba(103, 80, 164, 0.10), transparent 42%),
+    radial-gradient(circle at 88% 8%, rgba(201, 167, 77, 0.10), transparent 38%),
+    var(--background);
+  background-attachment: fixed;
+  min-height: 100vh;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Typography helpers ─────────────────────── */
+h1, h2, h3, h4 { font-family: var(--font-head); font-weight: 800; line-height: 1.1; }
+.mono { font-family: var(--font-mono); }
+.label {
+  font-family: var(--font-head);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.72rem;
+  color: var(--on-surface-variant);
+}
+.dim { color: var(--on-surface-variant); }
+
+/* ── Card (brutalist) ───────────────────────── */
+.card {
+  background: var(--surface-container-low);
+  border: var(--border-med) solid var(--ink);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+.card-flat {
+  background: var(--surface-container-low);
+  border: var(--border-thin) solid var(--ink);
+  border-radius: var(--radius-sm);
+}
+.card-pad { padding: var(--lg); }
+
+/* ── Buttons ────────────────────────────────── */
+.btn {
+  font-family: var(--font-head);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.85rem;
+  padding: 12px 18px;
+  border: var(--border-med) solid var(--ink);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease;
+  display: inline-flex; align-items: center; gap: 8px; justify-content: center;
+  user-select: none;
+}
+.btn:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--ink); }
+.btn:active { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--ink); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: var(--shadow-sm); }
+.btn-primary { background: var(--primary); color: var(--on-primary); }
+.btn-accent  { background: var(--tertiary-fixed); color: var(--ink); }
+.btn-danger  { background: var(--error); color: #fff; }
+.btn-ghost   { background: transparent; box-shadow: none; border-width: var(--border-thin); }
+.btn-ghost:hover { background: var(--surface-container); box-shadow: none; transform: none; }
+.btn-sm { padding: 8px 12px; font-size: 0.72rem; box-shadow: var(--shadow-sm); }
+
+/* ── Badges / Pills ─────────────────────────── */
+.badge {
+  font-family: var(--font-head);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.68rem;
+  padding: 4px 10px;
+  border: var(--border-thin) solid var(--ink);
+  border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--surface);
+}
+.badge-ok   { background: var(--success-container); color: var(--on-success-container); }
+.badge-warn { background: var(--warning-container); color: var(--warning); }
+.badge-err  { background: var(--error-container); color: var(--on-error-container); }
+.badge-info { background: var(--primary-fixed); color: var(--primary); }
+.badge-mute { background: var(--surface-container-high); color: var(--on-surface-variant); }
+
+.dot { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--ink); display: inline-block; }
+.dot-ok   { background: var(--success); }
+.dot-warn { background: var(--tertiary-container); }
+.dot-err  { background: var(--error); }
+.dot-mute { background: var(--outline-variant); }
+.pulse { animation: pulse 1.4s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+/* ── Plate chip (Indonesian license plate look) ── */
+.plate {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  background: #111;
+  color: #fff;
+  border: 3px solid #111;
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  display: inline-block;
+  box-shadow: inset 0 0 0 2px #fff, var(--shadow-sm);
+  font-size: 1.05rem;
+}
+
+/* ── Topbar ─────────────────────────────────── */
+.topbar {
+  display: flex; align-items: center; gap: var(--lg);
+  padding: var(--md) var(--xl);
+  background: var(--primary);
+  color: var(--on-primary);
+  border-bottom: var(--border-thick) solid var(--ink);
+}
+.topbar .brand { font-family: var(--font-head); font-weight: 800; font-size: 1.15rem; letter-spacing: 0.02em; }
+.topbar .brand small { display: block; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.18em; opacity: 0.8; text-transform: uppercase; }
+.topbar .spacer { flex: 1; }
+.logo-mark {
+  width: 34px; height: 34px; border-radius: var(--radius-sm);
+  background: var(--tertiary-fixed); color: var(--ink);
+  border: var(--border-thin) solid var(--ink);
+  display: grid; place-items: center; font-family: var(--font-head); font-weight: 900;
+}
+
+/* ── Scrollbar (subtle) ─────────────────────── */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--outline-variant); border-radius: 999px; }
+::-webkit-scrollbar-track { background: transparent; }

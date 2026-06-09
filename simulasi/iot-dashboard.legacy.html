@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartPark — IoT Gate Dashboard</title>
+<meta name="description" content="Dashboard operator gate SmartPark — monitor real-time perangkat IoT (ESP32 + kamera), ANPR/OCR, dan log kendaraan masuk.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/theme.css">
+<style>
+  .layout { display: grid; grid-template-columns: 1.4fr 1fr; gap: var(--lg); padding: var(--lg) var(--xl); max-width: 1400px; margin: 0 auto; align-items: start; }
+  @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } }
+  .col { display: flex; flex-direction: column; gap: var(--lg); }
+
+  /* camera */
+  .cam-wrap { position: relative; aspect-ratio: 16/10; background: #0c0a12; border-radius: var(--radius-sm); overflow: hidden; border: var(--border-thin) solid var(--ink); }
+  .cam-wrap video, .cam-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cam-off { position: absolute; inset: 0; display: grid; place-items: center; color: #8b86a0; font-family: var(--font-mono); font-size: 0.85rem; text-align: center; padding: var(--lg); }
+  .hud { position: absolute; inset: 0; pointer-events: none; font-family: var(--font-mono); color: #d9f99d; text-shadow: 0 1px 3px #000; }
+  .hud .tl { position: absolute; top: 10px; left: 12px; font-size: 0.72rem; }
+  .hud .tr { position: absolute; top: 10px; right: 12px; font-size: 0.72rem; text-align: right; }
+  .hud .bl { position: absolute; bottom: 10px; left: 12px; font-size: 0.72rem; }
+  .rec { color: #fb7185; display: inline-flex; align-items: center; gap: 5px; }
+  .rec::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: #fb7185; display: inline-block; animation: pulse 1.2s infinite; }
+  .scanline { position: absolute; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, #a78bfa, transparent); animation: scan 3.2s linear infinite; opacity: 0.7; }
+  @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+
+  .gate-state { display: flex; align-items: center; gap: var(--lg); padding: var(--md) var(--lg); }
+  .gate-light { width: 58px; height: 58px; border-radius: var(--radius-sm); border: var(--border-med) solid var(--ink); display: grid; place-items: center; font-family: var(--font-head); font-weight: 900; font-size: 1.6rem; }
+  .gate-closed { background: var(--error-container); color: var(--on-error-container); }
+  .gate-open { background: var(--success-container); color: var(--on-success-container); }
+  .gate-state .meta { line-height: 1.2; }
+  .gate-state .meta b { font-family: var(--font-head); font-size: 1.3rem; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: var(--sm); }
+  .seg { display: inline-flex; border: var(--border-thin) solid var(--ink); border-radius: var(--radius-sm); overflow: hidden; }
+  .seg button { font-family: var(--font-head); font-weight: 700; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 8px 14px; background: var(--surface); border: none; cursor: pointer; }
+  .seg button.active { background: var(--primary); color: var(--on-primary); }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sm); }
+  .stat { text-align: center; padding: 10px 6px; }
+  .stat .n { font-family: var(--font-head); font-weight: 900; font-size: 1.5rem; }
+  .stat .l { font-size: 0.6rem; }
+
+  .log { display: flex; flex-direction: column; max-height: 560px; overflow-y: auto; }
+  .log-row { display: grid; grid-template-columns: 54px 1fr auto; gap: 10px; padding: 10px 12px; border-bottom: var(--border-thin) solid var(--outline-variant); align-items: center; animation: slidein 0.35s ease; }
+  @keyframes slidein { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+  .log-row:last-child { border-bottom: none; }
+  .log-row .thumb { width: 54px; height: 40px; border-radius: var(--radius-xs); border: 1.5px solid var(--ink); background: #14121c center/cover; object-fit: cover; }
+  .log-row .when { font-family: var(--font-mono); font-size: 0.66rem; color: var(--on-surface-variant); }
+  .log-row .pl { margin: 3px 0; }
+  .log-row .gateinfo { font-size: 0.64rem; }
+  .empty-log { padding: var(--xxl); text-align: center; color: var(--on-surface-variant); }
+  .empty-log .big { font-size: 2.4rem; }
+
+  .card-head { display: flex; align-items: center; justify-content: space-between; padding: var(--md) var(--lg); border-bottom: var(--border-thin) solid var(--ink); }
+  .card-head h3 { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .conn { display: flex; gap: 8px; align-items: center; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field input { font-family: var(--font-mono); font-size: 0.78rem; padding: 7px 9px; border: var(--border-thin) solid var(--ink); border-radius: var(--radius-xs); width: 230px; }
+  dialog { border: var(--border-thick) solid var(--ink); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); padding: var(--xl); background: var(--surface); max-width: 380px; }
+  dialog::backdrop { background: rgba(29,27,32,0.45); }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 50; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo-mark">P</div>
+  <div class="brand">SmartPark <small>IoT Gate Dashboard</small></div>
+  <div class="spacer"></div>
+  <div class="conn">
+    <span class="badge" id="bgBackend"><span class="dot dot-mute"></span> BACKEND</span>
+    <span class="badge" id="bgAnpr"><span class="dot dot-mute"></span> ANPR</span>
+    <span class="badge" id="bgOcr"><span class="dot dot-mute"></span> OCR</span>
+    <span class="badge badge-mute mono" id="clock">--:--:--</span>
+    <button class="btn btn-ghost btn-sm" onclick="cfg.showModal()">⚙ KONFIG</button>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- LEFT -->
+  <div class="col">
+    <div class="card">
+      <div class="card-head">
+        <h3>📹 Live Camera — Gate</h3>
+        <span class="badge badge-info mono" id="gateIdBadge">GATE-A-IN</span>
+      </div>
+      <div class="card-pad" style="padding-top: var(--md);">
+        <div class="cam-wrap">
+          <video id="cam" autoplay playsinline muted></video>
+          <img id="lastShot" alt="" style="display:none">
+          <div class="cam-off" id="camOff">KAMERA TIDAK AKTIF<br><span style="font-size:0.72rem">Klik "AKTIFKAN KAMERA" — feed ini mewakili kamera gate (RPi5 / ESP32-CAM)</span></div>
+          <div class="scanline" id="scan" style="display:none"></div>
+          <div class="hud">
+            <div class="tl"><span class="rec" id="recTag" style="display:none">REC</span></div>
+            <div class="tr" id="hudGate">GATE-A-IN · ENTRY</div>
+            <div class="bl mono" id="hudTime"></div>
+          </div>
+        </div>
+
+        <div class="gate-state card-flat" style="margin-top: var(--md);">
+          <div class="gate-light gate-closed" id="gateLight">⛔</div>
+          <div class="meta">
+            <span class="label">Status Palang</span>
+            <b id="gateStateText">TERTUTUP</b>
+          </div>
+          <div class="spacer" style="flex:1"></div>
+          <div class="meta" style="text-align:right">
+            <span class="label">Perintah Terakhir</span>
+            <div class="mono" id="lastCmd" style="font-size:0.8rem">—</div>
+          </div>
+        </div>
+
+        <div style="margin-top: var(--md); display:flex; flex-direction:column; gap: var(--sm);">
+          <div class="controls">
+            <div class="field">
+              <span class="label">Gerbang</span>
+              <div class="seg" id="gateSeg">
+                <button class="active" data-gate="entry" data-id="GATE-A-IN">MASUK</button>
+                <button data-gate="exit" data-id="GATE-A-OUT">KELUAR</button>
+              </div>
+            </div>
+            <div class="field">
+              <span class="label">Kamera</span>
+              <button class="btn btn-sm" id="camBtn" onclick="toggleCam()">AKTIFKAN KAMERA</button>
+            </div>
+          </div>
+          <div class="controls">
+            <button class="btn btn-primary" id="trigBtn" onclick="triggerServerCamera()" disabled>⚡ SENSOR TRIGGER (kamera device)</button>
+            <button class="btn btn-accent" id="snapBtn" onclick="captureFromFeed()" disabled>📸 TANGKAP DARI FEED</button>
+          </div>
+          <p class="dim" style="font-size:0.72rem">
+            <b>Mode real:</b> ESP32 mengirim trigger ke <span class="mono">POST /device/trigger</span>; backend menangkap frame kamera lalu menjalankan ANPR+OCR. Setiap event (dari hardware maupun tombol di atas) muncul otomatis di log →
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3>📊 Statistik Sesi</h3><span class="label" id="statRange">HARI INI</span></div>
+      <div class="stats card-pad">
+        <div class="stat"><div class="n" id="stTotal">0</div><div class="label l">Total</div></div>
+        <div class="stat"><div class="n" id="stGranted" style="color:var(--success)">0</div><div class="label l">Granted</div></div>
+        <div class="stat"><div class="n" id="stDenied" style="color:var(--error)">0</div><div class="label l">Ditolak</div></div>
+        <div class="stat"><div class="n" id="stConf">—</div><div class="label l">Avg Conf</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="col">
+    <div class="card">
+      <div class="card-head">
+        <h3>🚗 Log Kendaraan</h3>
+        <span class="badge badge-mute" id="liveBadge"><span class="dot dot-mute"></span> MENUNGGU</span>
+      </div>
+      <div class="log" id="log">
+        <div class="empty-log" id="emptyLog">
+          <div class="big">🅿️</div>
+          <p style="margin-top:8px">Belum ada kendaraan terdeteksi.</p>
+          <p class="dim" style="font-size:0.74rem; margin-top:4px">Event akan muncul saat sensor/ESP32 trigger atau saat Anda menekan tombol trigger.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Config dialog -->
+<dialog id="cfg">
+  <h3 style="margin-bottom: var(--md)">⚙ Konfigurasi Backend</h3>
+  <div class="field" style="margin-bottom: var(--md)">
+    <span class="label">Base URL API</span>
+    <input id="baseUrlInput" value="http://localhost:8000">
+  </div>
+  <p class="dim" style="font-size:0.74rem; margin-bottom: var(--md)">
+    URL FastAPI <span class="mono">api/main.py</span> (mis. <span class="mono">http://localhost:8000</span> atau IP LAN Raspberry Pi). Polling event tiap 2 detik.
+  </p>
+  <div style="display:flex; gap:8px; justify-content:flex-end">
+    <button class="btn btn-ghost btn-sm" onclick="cfg.close()">BATAL</button>
+    <button class="btn btn-primary btn-sm" onclick="saveCfg()">SIMPAN</button>
+  </div>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<canvas id="snapCanvas" style="display:none"></canvas>
+
+<script>
+// ───────────────────────── State ─────────────────────────
+const cfg = document.getElementById('cfg');
+let BASE = localStorage.getItem('sp_base') || 'http://localhost:8000';
+document.getElementById('baseUrlInput').value = BASE;
+
+let gate = { type: 'entry', id: 'GATE-A-IN' };
+let lastEventId = 0;
+let stats = { total: 0, granted: 0, denied: 0, confSum: 0 };
+let camStream = null;
+let backendOnline = false;
+
+// ──────────────────────── Helpers ────────────────────────
+const $ = id => document.getElementById(id);
+const fmtTime = (d=new Date()) => d.toLocaleTimeString('id-ID', { hour12:false });
+const fmtClock = () => $('clock').textContent = fmtTime();
+setInterval(fmtClock, 1000); fmtClock();
+setInterval(()=> $('hudTime').textContent = new Date().toLocaleString('id-ID', {hour12:false}), 1000);
+
+function toast(msg, kind='info') {
+  const el = document.createElement('div');
+  el.className = 'badge badge-' + (kind==='err'?'err':kind==='ok'?'ok':'info');
+  el.style.boxShadow = 'var(--shadow-sm)'; el.style.fontSize = '0.8rem'; el.style.padding='10px 16px';
+  el.textContent = msg;
+  $('toast').appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .4s'; setTimeout(()=>el.remove(),400); }, 3200);
+}
+
+function setBadge(id, ok, text) {
+  const el = $(id); const dot = el.querySelector('.dot');
+  dot.className = 'dot ' + (ok ? 'dot-ok' : 'dot-err');
+  el.className = 'badge ' + (ok ? 'badge-ok' : 'badge-err');
+  if (text) el.lastChild.textContent = ' ' + text;
+}
+
+function saveCfg() {
+  BASE = $('baseUrlInput').value.replace(/\/+$/,'');
+  localStorage.setItem('sp_base', BASE);
+  cfg.close(); toast('Backend: ' + BASE); lastEventId = 0; pollHealth(); pollEvents();
+}
+
+// ──────────────────── Gate segment switch ────────────────
+$('gateSeg').addEventListener('click', e => {
+  const btn = e.target.closest('button'); if (!btn) return;
+  [...$('gateSeg').children].forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  gate = { type: btn.dataset.gate, id: btn.dataset.id };
+  $('gateIdBadge').textContent = gate.id;
+  $('hudGate').textContent = gate.id + ' · ' + gate.type.toUpperCase();
+});
+
+// ─────────────────────── Camera feed ─────────────────────
+async function toggleCam() {
+  if (camStream) {
+    camStream.getTracks().forEach(t=>t.stop()); camStream = null;
+    $('cam').srcObject = null; $('camOff').style.display='grid';
+    $('scan').style.display='none'; $('recTag').style.display='none';
+    $('camBtn').textContent = 'AKTIFKAN KAMERA'; $('snapBtn').disabled = true;
+    return;
+  }
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+    $('cam').srcObject = camStream; $('lastShot').style.display='none'; $('cam').style.display='block';
+    $('camOff').style.display='none'; $('scan').style.display='block'; $('recTag').style.display='inline-flex';
+    $('camBtn').textContent = 'MATIKAN KAMERA'; $('snapBtn').disabled = false;
+  } catch (err) {
+    toast('Kamera ditolak/tidak ada: ' + err.message, 'err');
+  }
+}
+
+function snapshotBlob() {
+  return new Promise(resolve => {
+    const v = $('cam'); const c = $('snapCanvas');
+    c.width = v.videoWidth || 1280; c.height = v.videoHeight || 720;
+    c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+    c.toBlob(b => resolve(b), 'image/jpeg', 0.9);
+  });
+}
+
+// ─────────────────────── Triggers ────────────────────────
+async function triggerServerCamera() {
+  if (!backendOnline) return toast('Backend offline — cek ⚙ KONFIG', 'err');
+  $('trigBtn').disabled = true;
+  try {
+    const res = await fetch(BASE + '/device/trigger', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ device_id:'dashboard-op', gate_id: gate.id, gate_type: gate.type, sensor:'manual-trigger', confidence: 0.25, nearest_only: true })
+    });
+    if (!res.ok) throw new Error((await res.json().catch(()=>({}))).detail || res.status);
+    toast('Trigger terkirim — menunggu pipeline…', 'ok');
+    setTimeout(pollEvents, 400);
+  } catch (e) { toast('Gagal trigger: ' + e.message, 'err'); }
+  finally { setTimeout(()=> $('trigBtn').disabled = false, 800); }
+}
+
+async function captureFromFeed() {
+  if (!backendOnline) return toast('Backend offline — cek ⚙ KONFIG', 'err');
+  if (!camStream) return toast('Aktifkan kamera dulu', 'err');
+  $('snapBtn').disabled = true;
+  try {
+    const blob = await snapshotBlob();
+    const fd = new FormData();
+    fd.append('file', blob, 'feed.jpg');
+    fd.append('device_id', 'dashboard-feed');
+    fd.append('gate_id', gate.id);
+    fd.append('gate_type', gate.type);
+    const res = await fetch(BASE + '/device/process-image', { method:'POST', body: fd });
+    if (!res.ok) throw new Error((await res.json().catch(()=>({}))).detail || res.status);
+    toast('Frame dikirim ke ANPR…', 'ok');
+    setTimeout(pollEvents, 300);
+  } catch (e) { toast('Gagal kirim frame: ' + e.message, 'err'); }
+  finally { setTimeout(()=> $('snapBtn').disabled = false, 600); }
+}
+
+// ──────────────────── Gate open animation ────────────────
+let gateTimer = null;
+function openGate(seconds, reason) {
+  clearTimeout(gateTimer);
+  $('gateLight').className = 'gate-light gate-open'; $('gateLight').textContent = '✅';
+  $('gateStateText').textContent = 'TERBUKA';
+  if (seconds > 0) gateTimer = setTimeout(closeGate, seconds * 1000 || 4000);
+}
+function closeGate() {
+  $('gateLight').className = 'gate-light gate-closed'; $('gateLight').textContent = '⛔';
+  $('gateStateText').textContent = 'TERTUTUP';
+}
+
+// ───────────────────── Render event ──────────────────────
+function decisionBadge(decision) {
+  if (decision === 'GRANTED') return '<span class="badge badge-ok">DIIZINKAN</span>';
+  if (decision === 'GRANTED_WITH_LOG') return '<span class="badge badge-warn">IZIN + LOG</span>';
+  return '<span class="badge badge-err">DITOLAK</span>';
+}
+
+function renderEvent(ev) {
+  $('emptyLog')?.remove();
+  const granted = ev.decision === 'GRANTED' || ev.decision === 'GRANTED_WITH_LOG';
+  stats.total++; granted ? stats.granted++ : stats.denied++;
+  if (ev.plate_confidence) stats.confSum += ev.plate_confidence;
+  $('stTotal').textContent = stats.total;
+  $('stGranted').textContent = stats.granted;
+  $('stDenied').textContent = stats.denied;
+  $('stConf').textContent = stats.total ? Math.round((stats.confSum/stats.total)*100)+'%' : '—';
+
+  $('lastCmd').textContent = ev.command || '—';
+  if (granted) openGate(ev.gate_open_seconds || 4, ev.action); else closeGate();
+
+  const when = ev.ts ? new Date(ev.ts) : new Date();
+  const plate = ev.plate && ev.plate.trim() ? ev.plate : '— TAK TERBACA —';
+  const conf = ev.plate_confidence ? Math.round(ev.plate_confidence*100)+'%' : '–';
+  // ESP32-CAM / webcam photo for this event. Backend sends a relative URL
+  // (/captures/..), so prepend BASE to load it from the API host.
+  const thumbSrc = ev.thumb ? (/^https?:/.test(ev.thumb) ? ev.thumb : BASE + ev.thumb) : '';
+  const thumb = thumbSrc
+    ? `<img class="thumb" src="${thumbSrc}" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'thumb'}))">`
+    : `<div class="thumb"></div>`;
+  // Show the latest captured plate big in the preview panel.
+  if (thumbSrc) { const ls = $('lastShot'); ls.src = thumbSrc; ls.style.display = 'block'; $('cam').style.display = 'none'; }
+
+  const row = document.createElement('div');
+  row.className = 'log-row';
+  row.innerHTML = `
+    ${thumb}
+    <div>
+      <div class="when">🕓 ${when.toLocaleString('id-ID',{hour12:false})}</div>
+      <div class="pl"><span class="plate">${plate}</span></div>
+      <div class="gateinfo dim mono">${ev.gate_id||gate.id} · ${(ev.gate_type||gate.type).toUpperCase()} · ${ev.color||'?'} · conf ${conf}</div>
+    </div>
+    <div style="text-align:right; display:flex; flex-direction:column; gap:4px; align-items:flex-end">
+      ${decisionBadge(ev.decision)}
+      <span class="label" style="font-size:0.58rem">${ev.command||''}</span>
+    </div>`;
+  $('log').prepend(row);
+  if (granted) row.animate([{background:'var(--success-container)'},{background:'transparent'}], {duration:1400});
+}
+
+// ───────────────── Backend polling ───────────────────────
+async function pollHealth() {
+  try {
+    const r = await fetch(BASE + '/health', { signal: AbortSignal.timeout(2500) });
+    const h = await r.json();
+    backendOnline = true;
+    setBadge('bgBackend', true, 'BACKEND');
+    setBadge('bgAnpr', !!h.anpr_model_loaded, 'ANPR');
+    setBadge('bgOcr', !!h.ocr_engine_loaded, 'OCR');
+    $('trigBtn').disabled = false;
+    $('liveBadge').className = 'badge badge-ok';
+    $('liveBadge').innerHTML = '<span class="dot dot-ok pulse"></span> LIVE';
+  } catch {
+    backendOnline = false;
+    setBadge('bgBackend', false, 'OFFLINE');
+    setBadge('bgAnpr', false, 'ANPR'); setBadge('bgOcr', false, 'OCR');
+    $('trigBtn').disabled = true;
+    $('liveBadge').className = 'badge badge-mute';
+    $('liveBadge').innerHTML = '<span class="dot dot-mute"></span> OFFLINE';
+  }
+}
+
+async function pollEvents() {
+  if (!backendOnline) return;
+  try {
+    const r = await fetch(BASE + `/device/events?since=${lastEventId}`, { signal: AbortSignal.timeout(2500) });
+    if (!r.ok) return; // endpoint mungkin belum ada di versi backend lama
+    const data = await r.json();
+    (data.events || []).forEach(ev => { renderEvent(ev); lastEventId = Math.max(lastEventId, ev.id || 0); });
+  } catch { /* abaikan, coba lagi */ }
+}
+
+// ─────────────────────── Loops ───────────────────────────
+pollHealth();
+setInterval(pollHealth, 4000);
+setInterval(pollEvents, 2000);
+</script>
+</body>
+</html>

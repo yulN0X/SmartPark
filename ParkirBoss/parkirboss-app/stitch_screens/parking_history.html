@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PARKIR BOSS - Parking History</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400&amp;family=Space+Grotesk:wght@700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                            "outline-variant": "#cbc4d2",
+                            "surface-bright": "#fdf7ff",
+                            "on-tertiary-fixed": "#241a00",
+                            "error-container": "#ffdad6",
+                            "surface-container-highest": "#e6e0e9",
+                            "on-secondary": "#ffffff",
+                            "error": "#ba1a1a",
+                            "surface-dim": "#ded8e0",
+                            "on-primary-fixed-variant": "#4f378a",
+                            "tertiary-fixed": "#ffdf93",
+                            "primary-fixed": "#e9ddff",
+                            "secondary": "#63597c",
+                            "secondary-container": "#e1d4fd",
+                            "on-background": "#1d1b20",
+                            "inverse-on-surface": "#f5eff7",
+                            "inverse-primary": "#cfbcff",
+                            "outline": "#7a7582",
+                            "surface-tint": "#6750a4",
+                            "surface-container-high": "#ece6ee",
+                            "primary-fixed-dim": "#cfbcff",
+                            "tertiary-fixed-dim": "#e7c365",
+                            "primary-container": "#6750a4",
+                            "surface-variant": "#e6e0e9",
+                            "surface-container": "#f2ecf4",
+                            "on-secondary-fixed-variant": "#4b4263",
+                            "on-secondary-fixed": "#1f1635",
+                            "secondary-fixed": "#e9ddff",
+                            "on-tertiary-fixed-variant": "#594400",
+                            "surface-container-low": "#f8f2fa",
+                            "primary": "#4f378a",
+                            "on-surface-variant": "#494551",
+                            "on-tertiary": "#ffffff",
+                            "on-secondary-container": "#645a7d",
+                            "tertiary-container": "#c9a74d",
+                            "secondary-fixed-dim": "#cdc0e9",
+                            "surface-container-lowest": "#ffffff",
+                            "on-tertiary-container": "#503d00",
+                            "on-primary-container": "#e0d2ff",
+                            "on-primary-fixed": "#22005d",
+                            "background": "#fdf7ff",
+                            "inverse-surface": "#322f35",
+                            "surface": "#fdf7ff",
+                            "tertiary": "#765b00",
+                            "on-error-container": "#93000a",
+                            "on-surface": "#1d1b20",
+                            "on-primary": "#ffffff",
+                            "on-error": "#ffffff"
+                    },
+                    "borderRadius": {
+                            "DEFAULT": "0.125rem",
+                            "lg": "0.25rem",
+                            "xl": "0.5rem",
+                            "full": "0.75rem"
+                    },
+                    "spacing": {
+                            "sm": "8px",
+                            "2xl": "48px",
+                            "margin": "20px",
+                            "xs": "4px",
+                            "xl": "32px",
+                            "gutter": "16px",
+                            "unit": "4px",
+                            "lg": "24px",
+                            "md": "16px"
+                    },
+                    "fontFamily": {
+                            "label-lg": ["Space Grotesk"],
+                            "headline-lg": ["Space Grotesk"],
+                            "body-md": ["Inter"],
+                            "label-sm": ["Space Grotesk"],
+                            "body-lg": ["Inter"],
+                            "body-sm": ["Inter"],
+                            "headline-xl": ["Space Grotesk"],
+                            "label-md": ["Space Grotesk"],
+                            "headline-md": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                            "label-lg": ["16px", {"lineHeight": "1.0", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                            "headline-lg": ["32px", {"lineHeight": "1.1", "fontWeight": "800"}],
+                            "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                            "label-sm": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                            "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                            "body-sm": ["14px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                            "headline-xl": ["48px", {"lineHeight": "1.0", "fontWeight": "900"}],
+                            "label-md": ["14px", {"lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                            "headline-md": ["24px", {"lineHeight": "1.2", "fontWeight": "700"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .neo-shadow {
+            box-shadow: 4px 4px 0px 0px #1a1a1a;
+        }
+        .neo-shadow-sm {
+            box-shadow: 2px 2px 0px 0px #1a1a1a;
+        }
+        .active-neo:active {
+            box-shadow: none;
+            transform: translate(4px, 4px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen pb-24 selection:bg-tertiary-container selection:text-on-tertiary-container">
+<!-- TopAppBar -->
+<header class="bg-surface border-b-4 border-on-background flex justify-between items-center w-full px-margin h-20 sticky top-0 z-40">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 border-4 border-on-background bg-surface-container-highest overflow-hidden">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="A close-up portrait of a user for an avatar, styled with brutalist, high-contrast lighting. The image features a clean background, sharp details, and a confident expression, fitting the raw, industrial aesthetic of a parking management app." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxskvuoZN8LlXisr3qlgkp0cPe8cyjiF_LJ5J0i4h4m6hWGdIThOLfDVYtZdd6LOnTceAbBvVc-GYk8DPDEHv1AIcU7j3-lhl3RkVKi0Aa_sbZ0mp5yjkR_kM8Utmz_XczgUWZUNWTcut_bX5dl_eJ4mRqusjNXV_5v-JDibCYpMzz4iOG5NZGNdN1rnw3FYWNrYeMlqV-EbIQXFhE8jCyikoakOTRQYSXYwlD7KZk8KHQvZcxdHGUh4XL81frSIaN0BlzB2OnoUBD"/>
+</div>
+</div>
+<div class="italic uppercase text-headline-md font-headline-md font-black text-tertiary">
+            PARKIR BOSS
+        </div>
+<div class="w-10 h-10 border-4 border-on-background bg-surface flex items-center justify-center neo-shadow-sm active-neo cursor-pointer">
+<span class="material-symbols-outlined text-tertiary" data-icon="notifications" style="font-variation-settings: 'FILL' 1;">notifications</span>
+</div>
+</header>
+<main class="px-margin py-lg space-y-lg">
+<!-- Page Title -->
+<div>
+<h1 class="text-headline-lg font-headline-lg uppercase border-b-4 border-on-background inline-block pb-xs mb-sm">Parking History</h1>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Review your past parking sessions and receipts.</p>
+</div>
+<!-- Filters -->
+<div class="flex gap-sm overflow-x-auto pb-sm scrollbar-hide">
+<button class="px-md py-sm border-4 border-on-background bg-tertiary text-on-tertiary text-label-md font-label-md uppercase neo-shadow active-neo whitespace-nowrap">
+                Semua
+            </button>
+<button class="px-md py-sm border-4 border-on-background bg-surface text-on-surface text-label-md font-label-md uppercase neo-shadow active-neo whitespace-nowrap hover:bg-surface-variant transition-colors">
+                Bulan Ini
+            </button>
+<button class="px-md py-sm border-4 border-on-background bg-surface text-on-surface text-label-md font-label-md uppercase neo-shadow active-neo whitespace-nowrap hover:bg-surface-variant transition-colors">
+                Minggu Ini
+            </button>
+</div>
+<!-- History List -->
+<div class="space-y-md">
+<!-- Item 1 -->
+<div class="border-4 border-on-background bg-surface neo-shadow p-0 flex flex-col">
+<div class="border-b-4 border-on-background bg-surface-container-low p-sm flex justify-between items-center">
+<span class="text-label-sm font-label-sm bg-primary-container text-on-primary-container px-sm py-xs border-2 border-on-background uppercase">
+                        B 1234 XYZ
+                    </span>
+<span class="text-label-sm font-label-sm bg-tertiary-container text-on-tertiary-container px-sm py-xs border-2 border-on-background uppercase">
+                        LUNAS
+                    </span>
+</div>
+<div class="p-md space-y-sm">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="text-label-lg font-label-lg uppercase">Central Plaza A3</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant font-mono mt-xs">12 Oct 2023 • 14:30 - 16:45</p>
+</div>
+<div class="text-right">
+<span class="text-headline-md font-headline-md font-black">Rp 4.800</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="border-4 border-on-background bg-surface neo-shadow p-0 flex flex-col">
+<div class="border-b-4 border-on-background bg-surface-container-low p-sm flex justify-between items-center">
+<span class="text-label-sm font-label-sm bg-primary-container text-on-primary-container px-sm py-xs border-2 border-on-background uppercase">
+                        B 9876 ABC
+                    </span>
+<span class="text-label-sm font-label-sm bg-tertiary-container text-on-tertiary-container px-sm py-xs border-2 border-on-background uppercase">
+                        LUNAS
+                    </span>
+</div>
+<div class="p-md space-y-sm">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="text-label-lg font-label-lg uppercase">Pakuwon Mall B7</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant font-mono mt-xs">10 Oct 2023 • 09:15 - 12:00</p>
+</div>
+<div class="text-right">
+<span class="text-headline-md font-headline-md font-black">Rp 6.000</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="border-4 border-on-background bg-surface neo-shadow p-0 flex flex-col opacity-75">
+<div class="border-b-4 border-on-background bg-surface-container-low p-sm flex justify-between items-center">
+<span class="text-label-sm font-label-sm bg-surface-variant text-on-surface-variant px-sm py-xs border-2 border-on-background uppercase">
+                        D 5555 JKL
+                    </span>
+<span class="text-label-sm font-label-sm bg-error-container text-on-error-container px-sm py-xs border-2 border-on-background uppercase">
+                        BATAL
+                    </span>
+</div>
+<div class="p-md space-y-sm">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="text-label-lg font-label-lg uppercase text-on-surface-variant">Grand City P1</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant font-mono mt-xs">05 Oct 2023 • 18:00</p>
+</div>
+<div class="text-right">
+<span class="text-headline-md font-headline-md font-black text-on-surface-variant line-through">Rp 2.000</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="bg-surface border-t-4 border-on-background fixed bottom-0 w-full z-50 flex justify-around items-center h-20 px-0">
+<a class="flex flex-col items-center justify-center text-on-surface h-full w-full hover:bg-surface-variant transition-colors group" href="#">
+<span class="material-symbols-outlined mb-xs group-hover:-translate-y-1 transition-transform" data-icon="home">home</span>
+<span class="text-label-sm font-label-sm uppercase">HOME</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface h-full w-full hover:bg-surface-variant transition-colors group" href="#">
+<span class="material-symbols-outlined mb-xs group-hover:-translate-y-1 transition-transform" data-icon="grid_view">grid_view</span>
+<span class="text-label-sm font-label-sm uppercase">SLOTS</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-tertiary text-on-tertiary border-2 border-on-background h-full w-full translate-y-[-4px] neo-shadow mx-1" href="#">
+<span class="material-symbols-outlined mb-xs" data-icon="history" style="font-variation-settings: 'FILL' 1;">history</span>
+<span class="text-label-sm font-label-sm uppercase">HISTORY</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface h-full w-full hover:bg-surface-variant transition-colors group" href="#">
+<span class="material-symbols-outlined mb-xs group-hover:-translate-y-1 transition-transform" data-icon="person">person</span>
+<span class="text-label-sm font-label-sm uppercase">PROFILE</span>
+</a>
+</nav>
+</body></html>

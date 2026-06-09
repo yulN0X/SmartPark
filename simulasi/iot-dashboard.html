@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parkir Boss — IoT Dashboard Realtime (Sensor)</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <link rel="stylesheet" href="iot-dashboard.css" />
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="logo-container">
+      <div class="logo-icon">P</div>
+      <h1>PARKIR <span>BOSS</span></h1>
+      <span style="font-family: var(--font-heading); font-weight: 700; font-size: 11px; border: 2px solid var(--on-background); padding: 2px 6px; background-color: var(--tertiary-fixed);">REALTIME IoT • SENSOR</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn-brutalist tertiary" id="btn-reset-demo">
+        <i class="material-icons">refresh</i> RESET DATA DEMO
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="dashboard-container">
+    
+    <!-- Column 1: CCTV & Gate Simulator -->
+    <div class="column-cctv">
+      <h2 class="column-title">
+        <i class="material-icons">videocam</i> Gate Camera
+      </h2>
+      
+      <div class="card-brutalist">
+        <div class="card-title">CCTV SCANNER FEED — LIVE SENSOR</div>
+
+        <!-- Backend connection -->
+        <div class="form-group" style="display:flex; gap:8px; align-items:flex-end; margin-bottom:10px;">
+          <div style="flex:1;">
+            <label class="form-label">Backend API</label>
+            <input type="text" id="sp-base-input" class="input-brutalist mono" style="font-size:11px;" placeholder="http://10.209.254.249:8000" />
+          </div>
+          <button class="btn-brutalist" id="btn-save-base" style="padding:8px 10px;">SET</button>
+          <span class="badge" id="bg-backend" style="white-space:nowrap;">● …</span>
+        </div>
+
+        <!-- Camera Screen Viewport -->
+        <div class="cctv-screen" id="cctv-viewport">
+          <div class="cctv-scanner-line"></div>
+          <div class="cctv-overlay">
+            CAM // <span id="cam-gate-label">GATE-A</span><br>
+            <span id="cctv-mode-label">SENSOR-TRIGGERED CAPTURE</span><br>
+            <span id="cctv-timestamp">—</span>
+          </div>
+          <div class="cctv-corner-brackets"></div>
+          <!-- Vehicle Image inside Cam -->
+          <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='200' viewBox='0 0 320 200'><rect width='320' height='200' fill='%230e0a16'/><text x='160' y='95' font-family='monospace' font-size='15' font-weight='bold' text-anchor='middle' fill='%2363597c'>MENUNGGU SENSOR</text><text x='160' y='120' font-family='monospace' font-size='10' text-anchor='middle' fill='%23463f57'>foto muncul saat kendaraan terdeteksi</text></svg>" alt="Menunggu sensor" class="car-image" id="cctv-car-img" />
+          <!-- Live Video Feed (local webcam, dev only) -->
+          <video id="cctv-video" class="camera-feed" autoplay playsinline muted></video>
+          <!-- ESP32-CAM live MJPEG stream (real IoT) -->
+          <img id="cctv-esp32-stream" class="camera-feed" style="display:none; object-fit:contain;" alt="ESP32-CAM stream" />
+          <!-- Detection Overlay Canvas -->
+          <canvas id="cctv-detect-overlay" class="cctv-detect-overlay"></canvas>
+          <!-- Detection Result Bar (bottom overlay) -->
+          <div class="cctv-detect-bar" id="cctv-detect-bar">
+            <span class="cctv-detect-plate" id="cctv-detect-plate"></span>
+            <span class="cctv-detect-conf" id="cctv-detect-conf"></span>
+            <span class="cctv-detect-badge" id="cctv-detect-badge"></span>
+          </div>
+
+          <div class="cctv-gate-indicator closed" id="gate-barrier-status">GATE CLOSED</div>
+        </div>
+
+        <!-- Live Camera Controls -->
+        <div class="cctv-live-controls">
+          <button class="btn-brutalist" id="btn-start-live" style="flex:1;">
+            <i class="material-icons">videocam</i> LIVE CAMERA
+          </button>
+          <button class="btn-brutalist error" id="btn-stop-live" style="flex:1; display:none;">
+            <i class="material-icons">videocam_off</i> STOP
+          </button>
+          <button class="btn-brutalist" id="btn-esp32-cam" style="flex:1;" title="Pakai kamera ESP32-CAM (live stream + ANPR)">
+            <i class="material-icons">router</i> ESP32-CAM
+          </button>
+          <button class="btn-brutalist error" id="btn-esp32-stop" style="flex:1; display:none;">
+            <i class="material-icons">videocam_off</i> STOP CAM
+          </button>
+          <label class="cctv-autoscan-toggle" title="Auto-scan setiap 2 detik">
+            <input type="checkbox" id="chk-auto-scan" />
+            <span class="toggle-label">AUTO SCAN</span>
+          </label>
+          <select class="select-brutalist" id="select-gate-id" style="width:auto; min-width:100px; padding:4px 6px; font-size:11px;">
+            <option value="GATE-A-IN">GATE-A-IN</option>
+            <option value="GATE-A-OUT">GATE-A-OUT</option>
+          </select>
+        </div>
+        
+        <div class="plate-ocr-box" id="plate-ocr-result">
+          B 1234 ABC
+        </div>
+
+
+
+        <!-- Sensor status panel (driven by real ESP32 events) -->
+        <div class="card-brutalist m-0" style="margin-top:12px; padding:10px; background-color: var(--surface-container-low);">
+          <div class="d-flex justify-between align-center" style="margin-bottom:6px;">
+            <span class="bold font-heading" style="font-size:12px;">STATUS SENSOR</span>
+            <span class="badge" id="sensor-state" style="background-color: var(--tertiary-fixed);">MENUNGGU…</span>
+          </div>
+          <div class="mono" style="font-size:11px; line-height:1.8;">
+            <div>Gate&nbsp;&nbsp;&nbsp;&nbsp;: <span id="last-gate">—</span></div>
+            <div>Sensor&nbsp;&nbsp;: <span id="last-sensor">—</span></div>
+            <div>Decision: <span id="last-decision">—</span></div>
+            <div>Command&nbsp;: <span id="last-command">—</span></div>
+            <div>Waktu&nbsp;&nbsp;&nbsp;: <span id="last-time">—</span></div>
+          </div>
+        </div>
+
+        <!-- Test trigger tanpa hardware -->
+        <div class="form-group mt-12" style="border-top: 3px dashed var(--on-background); padding-top: 12px; margin-top: 12px;">
+          <label class="form-label">Uji tanpa hardware (kirim foto seolah-olah sensor memicu)</label>
+          <select class="select-brutalist" id="test-gate-type" style="margin-bottom:8px;">
+            <option value="entry">GATE-A-IN — Masuk (entry)</option>
+            <option value="exit">GATE-A-OUT — Keluar (exit)</option>
+          </select>
+          <input type="file" id="input-file-upload" accept="image/*" style="display: none;" />
+          <button class="btn-brutalist secondary w-full" id="btn-file-upload" style="justify-content: center;">
+            <i class="material-icons">cloud_upload</i> UPLOAD FOTO → /device/process-image
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 2: Mobile App Simulator -->
+    <div class="column-phone">
+      <h2 class="column-title">
+        <i class="material-icons">smartphone</i> App Simulator
+      </h2>
+      
+      <div class="phone-container">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          
+          <!-- Status Bar -->
+          <div class="phone-status-bar">
+            <span id="phone-time">17:35</span>
+            <div class="icons">
+              <i class="material-icons" style="font-size: 11px;">signal_cellular_4_bar</i>
+              <i class="material-icons" style="font-size: 11px;">wifi</i>
+              <i class="material-icons" style="font-size: 11px;">battery_full</i>
+            </div>
+          </div>
+          
+          <!-- App Header -->
+          <div class="phone-app-header">
+            <h2>PARKIR BOSS</h2>
+            <i class="material-icons" id="phone-notif-btn" style="cursor: pointer;">notifications_none</i>
+          </div>
+
+          <!-- Phone Contents Area -->
+          <div class="phone-content-area">
+            
+            <!-- SCREEN 1: Onboarding (default first run) -->
+            <div class="phone-screen-view" id="phone-screen-onboarding">
+              <div class="d-flex justify-between align-center border-b-4 border-on-background pb-8 mb-12">
+                <span class="bold italic uppercase" style="color: var(--tertiary);">ONBOARDING</span>
+                <span class="btn-brutalist btn-skip-onboarding" style="padding: 2px 8px; font-size: 10px;">SKIP</span>
+              </div>
+              <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;">
+                <div class="card-brutalist m-0" style="width: 190px; height: 190px; background-color: var(--primary-fixed); display: flex; align-items: center; justify-content: center; box-shadow: var(--neo-shadow);">
+                  <i class="material-icons" style="font-size: 110px; color: var(--primary);">document_scanner</i>
+                </div>
+                <h3 class="italic uppercase font-heading" style="font-size: 18px; text-align: center; font-weight: 900;">KAMERA AI BACA PLAT OTOMATIS</h3>
+                <p style="font-size: 12px; text-align: center; border-left: 3px solid var(--primary); padding-left: 8px; color: var(--on-surface-variant);">
+                  Parkir instan tanpa tiket fisik. Sistem cerdas kami mengenali kendaraan Anda dalam sekejap saat melintas gate.
+                </p>
+              </div>
+              <button class="btn-brutalist tertiary w-full btn-next-onboarding" style="justify-content: center; margin-top: 16px;">
+                LANJUT <i class="material-icons">arrow_forward</i>
+              </button>
+            </div>
+
+            <!-- SCREEN 2: Dashboard View -->
+            <div class="phone-screen-view active" id="phone-screen-dashboard">
+              <!-- Balance Card -->
+              <div class="phone-balance-card">
+                <i class="material-icons wallet-bg-icon">account_balance_wallet</i>
+                <div class="label">MAIN BALANCE</div>
+                <div class="amount" id="app-balance-display">Rp 42.500</div>
+                <button class="btn-brutalist tertiary" id="app-btn-top-up" style="padding: 4px 12px; font-size: 12px;">
+                  <i class="material-icons" style="font-size: 14px;">add</i> TOP UP
+                </button>
+              </div>
+
+              <!-- Active Session Area (Dynamic) -->
+              <div id="app-active-session-container">
+                <!-- Will be dynamically populated by JS -->
+              </div>
+
+              <!-- Nearby Availability -->
+              <div class="phone-nearby-section-title">NEARBY SLOTS</div>
+              
+              <div class="phone-nearby-item">
+                <div class="header">
+                  <span>GRAND MALL P1</span>
+                  <span class="badge" style="background-color: var(--error-container); color: var(--on-error-container);">FAST FILLING</span>
+                </div>
+                <div class="progress-container">
+                  <div class="progress-bar">
+                    <div class="progress-fill full" style="width: 85%;"></div>
+                  </div>
+                  <div class="slot-count">15/100</div>
+                </div>
+              </div>
+
+              <div class="phone-nearby-item">
+                <div class="header">
+                  <span>CITY CENTER HUB</span>
+                  <span class="badge" style="background-color: #a8ffb2; color: #00501a;">AVAILABLE</span>
+                </div>
+                <div class="progress-container">
+                  <div class="progress-bar">
+                    <div class="progress-fill" style="width: 40%; background-color: var(--tertiary-container)"></div>
+                  </div>
+                  <div class="slot-count">120/200</div>
+                </div>
+              </div>
+
+              <!-- Promo Banner -->
+              <div class="phone-promo-banner">
+                <i class="material-icons">local_activity</i>
+                <div class="tag">WEEKEND SPECIAL</div>
+                <h3>50% OFF<br>PARKING</h3>
+                <button class="btn-brutalist" style="margin-top: 8px; padding: 4px 10px; font-size: 11px; background-color: var(--surface)">CLAIM NOW</button>
+              </div>
+            </div>
+
+            <!-- SCREEN 3: Slot Map View -->
+            <div class="phone-screen-view" id="phone-screen-slots">
+              <div class="card-brutalist" style="background-color: var(--primary-container); color: var(--on-primary); margin-bottom: 12px; padding: 10px;">
+                <div class="bold font-heading" style="font-size: 14px; text-transform: uppercase;">Pilih Slot Parkir</div>
+                <div style="font-size: 11px; margin-top: 4px; display: flex; align-items: center; gap: 4px; border-top: 2px solid var(--on-background); padding-top: 4px;">
+                  <i class="material-icons" style="font-size: 12px;">location_on</i> CENTRAL PLAZA • <span id="app-available-slots-label">24</span> SLOT
+                </div>
+              </div>
+
+              <!-- Floor Selector Tabs -->
+              <div class="phone-floor-tabs">
+                <span class="phone-floor-tab active" data-floor="0">LANTAI A</span>
+                <span class="phone-floor-tab" data-floor="1">LANTAI B</span>
+                <span class="phone-floor-tab" data-floor="2">LANTAI C</span>
+              </div>
+
+              <!-- Slots Map Grid -->
+              <div class="phone-slots-grid" id="app-slots-grid">
+                <!-- Dynamically generated in app.js -->
+              </div>
+
+              <!-- Selection detail panel -->
+              <div class="phone-slot-details-sheet" id="app-slot-details-panel">
+                <div class="d-flex justify-between align-center">
+                  <div>
+                    <h4 id="detail-slot-name">SLOT A3</h4>
+                    <p id="detail-slot-desc" style="font-size: 11px; color: var(--on-surface-variant)">Lantai A • 12m dari Gate A</p>
+                  </div>
+                  <span class="badge" style="background-color: var(--tertiary-fixed); border: 2px solid var(--on-background); padding: 2px 6px; font-size: 10px; font-weight: 700;">TERSEDIA</span>
+                </div>
+                <button class="btn-brutalist tertiary w-full mt-8" id="app-btn-claim-slot" style="justify-content: center;">
+                  CLAIM SLOT INI
+                </button>
+              </div>
+            </div>
+
+            <!-- SCREEN 4: Transaction History View -->
+            <div class="phone-screen-view" id="phone-screen-history">
+              <div class="bold font-heading mb-12" style="font-size: 16px; border-bottom: 3px solid var(--on-background); padding-bottom: 4px;">RIWAYAT TRANSAKSI</div>
+              <div style="flex: 1; overflow-y: auto;" id="app-history-list">
+                <!-- Loaded Dynamically -->
+              </div>
+            </div>
+
+            <!-- SCREEN 5: Profile View -->
+            <div class="phone-screen-view" id="phone-screen-profile">
+              <div class="phone-profile-header">
+                <div class="phone-profile-avatar">AB</div>
+                <div class="phone-profile-info">
+                  <h3 id="profile-name">Alex Boss</h3>
+                  <p id="profile-email">alex.boss@student.its.ac.id</p>
+                </div>
+              </div>
+
+              <div class="bold font-heading mb-8" style="font-size: 13px;">KENDARAAN SAYA</div>
+              <div class="phone-vehicles-list" id="profile-vehicles-container">
+                <!-- Loaded Dynamically -->
+              </div>
+
+              <div class="card-brutalist" style="padding: 10px; background-color: var(--surface-container-low);">
+                <div class="form-group">
+                  <label class="form-label" style="font-size: 11px;">Daftarkan Kendaraan Baru</label>
+                  <div class="d-flex gap-8">
+                    <input type="text" id="input-new-plate" class="input-brutalist mono" placeholder="B 9999 XYZ" style="text-transform: uppercase;" />
+                    <button class="btn-brutalist primary" id="btn-add-vehicle" style="padding: 6px 12px;">DAFTAR</button>
+                  </div>
+                </div>
+              </div>
+              
+              <button class="btn-brutalist error w-full mt-8" id="btn-logout-app" style="justify-content: center;">
+                <i class="material-icons">logout</i> KELUAR AKUN
+              </button>
+            </div>
+
+            <!-- MODAL SCREEN: Wallet Top Up Options -->
+            <div class="phone-modal-screen" id="phone-modal-top-up">
+              <div class="phone-modal-header">
+                <i class="material-icons" id="btn-close-topup" style="cursor: pointer;">arrow_back</i>
+                <h3>Top Up Saldo</h3>
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">Nominal Top Up</label>
+                <div class="top-up-grid">
+                  <div class="top-up-option active" data-amount="20000">Rp 20.000</div>
+                  <div class="top-up-option" data-amount="50000">Rp 50.000</div>
+                  <div class="top-up-option" data-amount="100000">Rp 100.000</div>
+                  <div class="top-up-option" data-amount="200000">Rp 200.000</div>
+                </div>
+                
+                <label class="form-label">Atau Input Kustom</label>
+                <input type="number" id="input-custom-topup" class="input-brutalist" placeholder="Contoh: 150000" style="margin-bottom: 16px;" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Metode Pembayaran</label>
+                <select class="select-brutalist" id="select-topup-method">
+                  <option value="GoPay">GoPay / E-Wallet</option>
+                  <option value="Transfer Bank">Transfer Bank Mandiri/ITS</option>
+                  <option value="QRIS">QRIS Code</option>
+                </select>
+              </div>
+
+              <button class="btn-brutalist tertiary w-full mt-8" id="btn-submit-topup" style="justify-content: center; font-size: 15px;">
+                BAYAR SEKARANG
+              </button>
+            </div>
+
+            <!-- MODAL SCREEN: Top Up Success Receipt -->
+            <div class="phone-modal-screen" id="phone-modal-success">
+              <div class="success-checkmark-wrapper">
+                <div class="success-circle">
+                  <i class="material-icons">check_circle</i>
+                </div>
+                
+                <h2 class="success-title">TOP UP<br>BERHASIL!</h2>
+
+                <div class="success-details-card">
+                  <div class="success-detail-row headline">
+                    <span>JUMLAH TOP UP</span>
+                    <span id="success-amount">Rp 50.000</span>
+                  </div>
+                  <div class="success-detail-row">
+                    <span>METODE</span>
+                    <span id="success-method">GOPAY</span>
+                  </div>
+                  <div class="success-detail-row">
+                    <span>WAKTU</span>
+                    <span id="success-time">05 Juni 2026, 17:35</span>
+                  </div>
+                </div>
+
+                <div class="success-balance-banner">
+                  <span class="label">SALDO BARU</span>
+                  <span class="val" id="success-new-balance">Rp 92.500</span>
+                </div>
+
+                <button class="btn-brutalist tertiary w-full" id="btn-success-close" style="justify-content: center;">
+                  KEMBALI KE BERANDA
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bottom Navigation Bar -->
+          <div class="phone-nav-bar">
+            <button class="phone-nav-btn active" data-target="dashboard">
+              <i class="material-icons">home</i>
+              <span>Home</span>
+            </button>
+            <button class="phone-nav-btn" data-target="slots">
+              <i class="material-icons">local_parking</i>
+              <span>Slots</span>
+            </button>
+            <button class="phone-nav-btn" data-target="history">
+              <i class="material-icons">history</i>
+              <span>History</span>
+            </button>
+            <button class="phone-nav-btn" data-target="profile">
+              <i class="material-icons">person</i>
+              <span>Profile</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 3: Server Admin Database & Logs -->
+    <div class="column-admin">
+      <h2 class="column-title">
+        <i class="material-icons">dns</i> Server Admin Panel
+      </h2>
+      
+      <!-- Stats Board -->
+      <div class="admin-grid">
+        <div class="admin-stat-card">
+          <div class="label">Total Slots</div>
+          <div class="val" id="stat-total-slots">30</div>
+        </div>
+        <div class="admin-stat-card" style="background-color: var(--primary-fixed);">
+          <div class="label">Tersedia</div>
+          <div class="val" id="stat-avail-slots">24</div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="label">Sesi Aktif</div>
+          <div class="val" id="stat-active-sessions">0</div>
+        </div>
+        <div class="admin-stat-card" style="background-color: var(--tertiary-fixed);">
+          <div class="label">Pendapatan</div>
+          <div class="val" id="stat-revenue">Rp 0</div>
+        </div>
+      </div>
+
+      <!-- Real-time Database tables -->
+      <div class="card-brutalist" style="margin-bottom: 24px;">
+        <div class="admin-tabs">
+          <div class="admin-tab active" data-tab="sessions">Sesi Parkir Aktif</div>
+          <div class="admin-tab" data-tab="vehicles">Mobil Terdaftar</div>
+          <div class="admin-tab" data-tab="rates">Tarif &amp; Lokasi</div>
+        </div>
+
+        <!-- Tab Content 1: Active Sessions -->
+        <div class="admin-table-container" id="admin-tab-sessions">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Sesi ID</th>
+                <th>Plat Nomor</th>
+                <th>Pemilik</th>
+                <th>Gate In</th>
+                <th>Waktu Masuk</th>
+                <th>Biaya Berjalan</th>
+              </tr>
+            </thead>
+            <tbody id="table-active-sessions-body">
+              <!-- Dynamically populated -->
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--on-surface-variant);">Tidak ada sesi parkir yang aktif saat ini.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Tab Content 2: Registered Vehicles -->
+        <div class="admin-table-container" id="admin-tab-vehicles" style="display: none;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Plat Nomor</th>
+                <th>Pemilik Akun</th>
+                <th>Email Akun</th>
+                <th>Saldo Dompet</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="table-registered-vehicles-body">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Tab Content 3: Rates and Configuration -->
+        <div class="admin-table-container" id="admin-tab-rates" style="display: none;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Atribut Sistem</th>
+                <th>Nilai Konfigurasi</th>
+                <th>Deskripsi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="bold">Tarif Parkir Mobil</td>
+                <td class="mono">Rp 5.000 / jam</td>
+                <td>Dihitung per jam pecahan ke atas</td>
+              </tr>
+              <tr>
+                <td class="bold">Batas Harian Maksimal</td>
+                <td class="mono">Rp 50.000 / hari</td>
+                <td>Biaya parkir maksimal per 24 jam</td>
+              </tr>
+              <tr>
+                <td class="bold">Lokasi GATE-A-IN</td>
+                <td class="mono">-7.279594, 112.797377</td>
+                <td>Gerbang Masuk A ITS Surabaya (radius 15m)</td>
+              </tr>
+              <tr>
+                <td class="bold">Lokasi GATE-A-OUT</td>
+                <td class="mono">-7.279700, 112.797500</td>
+                <td>Gerbang Keluar A ITS Surabaya (radius 15m)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Real-time Simulation logs console -->
+      <div class="console-container">
+        <div class="console-header">
+          <div class="console-title">
+            <div class="console-dot"></div>
+            SYSTEM BACKEND CONSOLE LOGS
+          </div>
+          <button class="btn-brutalist" id="btn-clear-console" style="padding: 2px 6px; font-size: 10px; background-color: transparent; border-width: 2px; color: var(--outline-variant); border-color: var(--outline);">CLEAR</button>
+        </div>
+        <div class="console-output" id="console-output-box">
+          <!-- Dynamically populated logs -->
+          <div class="console-line"><span class="console-line timestamp">[17:32:40]</span> <span class="console-line info">[SYSTEM] Starting Parkir Boss backend database initialization...</span></div>
+          <div class="console-line"><span class="console-line timestamp">[17:32:41]</span> <span class="console-line success">[SEED] ✅ Parking rate added: Rp 5.000/jam, maks Rp 50.000/hari</span></div>
+          <div class="console-line"><span class="console-line timestamp">[17:32:41]</span> <span class="console-line success">[SEED] ✅ Gate GATE-A-IN added: Gate Masuk A (radius 15m)</span></div>
+          <div class="console-line"><span class="console-line timestamp">[17:32:41]</span> <span class="console-line success">[SEED] ✅ Gate GATE-A-OUT added: Gate Keluar A (radius 15m)</span></div>
+          <div class="console-line"><span class="console-line timestamp">[17:32:41]</span> <span class="console-line info">[SYSTEM] Database seeding completed successfully. Listening on http://localhost:8000</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="iot-dashboard.js"></script>
+</body>
+</html>
