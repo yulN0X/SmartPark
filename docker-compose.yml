@@ -1,0 +1,31 @@
+# ============================================================
+# SmartPark — Docker Compose
+# ============================================================
+# Usage:
+#   docker compose up -d          # Start in background
+#   docker compose logs -f        # View logs
+#   docker compose down           # Stop
+#   docker compose up --build     # Rebuild and start
+# ============================================================
+
+services:
+  smartpark-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${DOCKER_USERNAME:-yuln0x}/smartpark-api:latest
+    container_name: smartpark-api
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Persist uploaded images (optional, untuk debugging)
+      - ./uploads:/app/uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3

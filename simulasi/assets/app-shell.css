@@ -1,0 +1,114 @@
+/* ============================================================
+   ParkirBoss — App Shell (tiruan HTML)
+   Replika layar app Flutter untuk dipajang di dalam simulasi
+   integrasi (saldo, sesi aktif, tracking). Bukan Flutter Web —
+   HTML murni yang distyle sesuai design system app.
+   ============================================================ */
+
+.phone {
+  width: 320px;
+  flex: 0 0 320px;
+  background: var(--surface);
+  border: var(--border-thick) solid var(--ink);
+  border-radius: 28px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 660px;
+  position: relative;
+}
+.phone-notch {
+  height: 26px;
+  background: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+}
+.phone-notch::after {
+  content: ""; width: 90px; height: 7px; border-radius: 999px; background: #4a4750;
+}
+.phone-status {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 18px 2px; font-size: 0.7rem; font-weight: 700; font-family: var(--font-head);
+  color: var(--on-surface);
+}
+.phone-body { flex: 1; overflow-y: auto; padding: var(--lg); display: flex; flex-direction: column; gap: var(--md); }
+
+/* App header */
+.app-head { display: flex; align-items: center; gap: 10px; }
+.app-head .avatar {
+  width: 40px; height: 40px; border-radius: var(--radius-md);
+  background: var(--primary-fixed); border: var(--border-thin) solid var(--ink);
+  display: grid; place-items: center; font-family: var(--font-head); font-weight: 800; color: var(--primary);
+}
+.app-head .who { line-height: 1.1; }
+.app-head .who b { font-family: var(--font-head); font-size: 0.95rem; }
+.app-head .who span { font-size: 0.72rem; color: var(--on-surface-variant); }
+
+/* Balance card */
+.balance-card {
+  background: var(--primary);
+  color: var(--on-primary);
+  border: var(--border-med) solid var(--ink);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--lg);
+}
+.balance-card .lbl { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.14em; opacity: 0.85; font-family: var(--font-head); font-weight: 700; }
+.balance-card .amt {
+  font-family: var(--font-head); font-weight: 900; font-size: 2rem; margin-top: 4px;
+  transition: color 0.3s ease;
+}
+.balance-card .amt.flash-down { color: var(--tertiary-fixed); }
+.balance-card .row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 10px; }
+.balance-card .chip {
+  font-size: 0.62rem; font-family: var(--font-mono); background: rgba(255,255,255,0.15);
+  border: 1.5px solid rgba(255,255,255,0.5); border-radius: var(--radius-sm); padding: 3px 8px;
+}
+
+/* Section title */
+.app-section { font-family: var(--font-head); font-weight: 800; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--on-surface-variant); margin-top: 4px; }
+
+/* Active session card */
+.session-card {
+  border: var(--border-med) solid var(--ink); border-radius: var(--radius-md);
+  background: var(--surface-container-low); box-shadow: var(--shadow-sm); overflow: hidden;
+}
+.session-card .bar { background: var(--tertiary-fixed); padding: 6px 12px; font-family: var(--font-head); font-weight: 700; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: var(--border-thin) solid var(--ink); display: flex; justify-content: space-between; align-items: center; }
+.session-card .inner { padding: var(--md); display: flex; flex-direction: column; gap: 8px; }
+.kv { display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; }
+.kv .k { color: var(--on-surface-variant); }
+.kv .v { font-family: var(--font-mono); font-weight: 600; }
+.kv .v.big { font-size: 1.05rem; }
+.cost-live { font-family: var(--font-head); font-weight: 900; font-size: 1.5rem; color: var(--primary); }
+
+/* warning banner */
+.app-warn {
+  background: var(--error-container); color: var(--on-error-container);
+  border: var(--border-med) solid var(--ink); border-radius: var(--radius-sm);
+  padding: 10px 12px; font-size: 0.78rem; font-weight: 600;
+  display: none; align-items: center; gap: 8px;
+}
+.app-warn.show { display: flex; }
+
+/* empty state */
+.app-empty { text-align: center; padding: var(--xl) var(--md); color: var(--on-surface-variant); border: var(--border-thin) dashed var(--outline); border-radius: var(--radius-md); }
+.app-empty .big { font-size: 2rem; }
+
+/* ── Mini map / tracking ────────────────────── */
+.tracking-card { border: var(--border-med) solid var(--ink); border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-sm); background: var(--surface-container-low); }
+.tracking-card .bar { background: var(--primary-fixed); color: var(--primary); padding: 6px 12px; font-family: var(--font-head); font-weight: 700; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: var(--border-thin) solid var(--ink); }
+.map { position: relative; width: 100%; height: 168px; background:
+    repeating-linear-gradient(0deg, #ece6ee 0 1px, transparent 1px 22px),
+    repeating-linear-gradient(90deg, #ece6ee 0 1px, transparent 1px 22px),
+    var(--surface-container);
+}
+.map svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.map .gps-tag { position: absolute; bottom: 6px; right: 8px; font-family: var(--font-mono); font-size: 0.6rem; background: var(--surface); border: 1.5px solid var(--ink); border-radius: var(--radius-sm); padding: 2px 6px; }
+.car-dot { transition: transform 1s linear; }
+
+/* receipt */
+.receipt { border: var(--border-med) solid var(--ink); border-radius: var(--radius-md); background: var(--surface-container-low); box-shadow: var(--shadow-sm); overflow: hidden; display: none; }
+.receipt.show { display: block; }
+.receipt .bar { background: var(--success-container); color: var(--on-success-container); padding: 8px 12px; font-family: var(--font-head); font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.78rem; border-bottom: var(--border-thin) solid var(--ink); }
+.receipt .inner { padding: var(--md); display: flex; flex-direction: column; gap: 6px; }
+.receipt .total { border-top: 2px dashed var(--outline); margin-top: 6px; padding-top: 8px; }

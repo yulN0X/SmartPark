@@ -1,0 +1,43 @@
+# Git
+.git
+.gitignore
+
+# IDE / OS
+.DS_Store
+*.swp
+*.swo
+.vscode
+.idea
+__pycache__
+*.pyc
+
+# iOS App (not needed in API container)
+SmartPark/
+
+# Dataset (too large for Docker image, hosted on HuggingFace/Kaggle)
+Indonesian License Plate Dataset/
+
+# Training artifacts
+runs/
+*.zip
+
+# Test uploads
+uploads/
+foto test/
+
+# Documentation (not needed at runtime)
+docs/
+huggingface/
+scripts/
+*.md
+*.pdf
+!requirements.txt
+
+# Agent / config files
+.agents/
+.claude/
+graphify-out/
+
+# Misc
+Bisnis/
+models.zip

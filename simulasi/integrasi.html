@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartPark — Simulasi Integrasi Sistem</title>
+<meta name="description" content="Demo integrasi SmartPark: ANPR+OCR real via kamera, alur entry/exit, pemotongan saldo & tracking kendaraan (app ParkirBoss).">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/theme.css">
+<link rel="stylesheet" href="assets/app-shell.css">
+<style>
+  .layout { display: grid; grid-template-columns: 1fr 0.85fr 320px; gap: var(--lg); padding: var(--lg) var(--xl); max-width: 1500px; margin: 0 auto; align-items: start; }
+  @media (max-width: 1200px) { .layout { grid-template-columns: 1fr 1fr; } .phone-col { grid-column: 1 / -1; display:flex; justify-content:center; } }
+  @media (max-width: 760px) { .layout { grid-template-columns: 1fr; } }
+  .col { display: flex; flex-direction: column; gap: var(--lg); }
+  .card-head { display: flex; align-items: center; justify-content: space-between; padding: var(--md) var(--lg); border-bottom: var(--border-thin) solid var(--ink); }
+  .card-head h3 { font-size: 0.92rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .cam-wrap { position: relative; aspect-ratio: 4/3; background:#0c0a12; border-radius: var(--radius-sm); overflow: hidden; border: var(--border-thin) solid var(--ink); }
+  .cam-wrap video, .cam-wrap img { width:100%; height:100%; object-fit: cover; display:block; }
+  .cam-off { position:absolute; inset:0; display:grid; place-items:center; color:#8b86a0; font-family: var(--font-mono); font-size:0.8rem; text-align:center; padding: var(--lg); }
+  .hud { position:absolute; inset:0; pointer-events:none; font-family: var(--font-mono); color:#d9f99d; text-shadow:0 1px 3px #000; font-size:0.7rem; }
+  .hud .tl { position:absolute; top:8px; left:10px; } .hud .br { position:absolute; bottom:8px; right:10px; }
+  .scanline { position:absolute; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,#a78bfa,transparent); animation:scan 3s linear infinite; }
+  @keyframes scan { 0%{top:0} 100%{top:100%} }
+  .crosshair { position:absolute; inset:18% 14%; border:2px dashed rgba(167,139,250,.7); border-radius:6px; }
+
+  .phase-tabs { display:flex; gap:0; border:var(--border-thin) solid var(--ink); border-radius: var(--radius-sm); overflow:hidden; }
+  .phase-tabs div { flex:1; text-align:center; padding:8px; font-family:var(--font-head); font-weight:700; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em; background: var(--surface); }
+  .phase-tabs div.on { background: var(--primary); color: var(--on-primary); }
+
+  /* stepper */
+  .stepper { display:flex; flex-direction:column; }
+  .step { display:grid; grid-template-columns: 34px 1fr; gap:12px; padding:12px 4px; position:relative; }
+  .step:not(:last-child)::before { content:""; position:absolute; left:16px; top:38px; bottom:-12px; width:3px; background: var(--outline-variant); }
+  .step.done::before { background: var(--success); }
+  .step .num { width:34px; height:34px; border-radius: var(--radius-sm); border:var(--border-thin) solid var(--ink); display:grid; place-items:center; font-family:var(--font-head); font-weight:800; background: var(--surface); z-index:1; }
+  .step.active .num { background: var(--tertiary-fixed); animation: pulse 1.2s infinite; }
+  .step.done .num { background: var(--success-container); color: var(--on-success-container); }
+  .step.fail .num { background: var(--error-container); color: var(--on-error-container); }
+  .step .body b { font-family:var(--font-head); font-size:0.92rem; }
+  .step .body .desc { font-size:0.76rem; color: var(--on-surface-variant); margin-top:2px; }
+  .step .body .res { font-size:0.76rem; margin-top:4px; font-family: var(--font-mono); display:none; }
+  .step.done .res, .step.fail .res, .step.active .res { display:block; }
+  .step .tag-real { font-size:0.55rem; background: var(--error); color:#fff; padding:1px 6px; border-radius:999px; font-family:var(--font-head); font-weight:700; letter-spacing:0.06em; vertical-align:middle; margin-left:6px; }
+  .step .tag-sim { font-size:0.55rem; background: var(--secondary-container); color: var(--secondary); padding:1px 6px; border-radius:999px; font-family:var(--font-head); font-weight:700; letter-spacing:0.06em; vertical-align:middle; margin-left:6px; }
+
+  .controls { display:flex; flex-wrap:wrap; gap:var(--sm); margin-top: var(--md); }
+  select, .controls input { font-family: var(--font-mono); font-size:0.8rem; padding:8px; border:var(--border-thin) solid var(--ink); border-radius: var(--radius-xs); }
+
+  .conn { display:flex; gap:8px; align-items:center; }
+  dialog { border: var(--border-thick) solid var(--ink); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); padding: var(--xl); background: var(--surface); max-width: 400px; }
+  dialog::backdrop { background: rgba(29,27,32,0.45); }
+  .field { display:flex; flex-direction:column; gap:4px; }
+  .field input { font-family: var(--font-mono); font-size:0.8rem; padding:8px; border:var(--border-thin) solid var(--ink); border-radius: var(--radius-xs); }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 50; display:flex; flex-direction:column; gap:8px; align-items:center; }
+  .legend { font-size:0.72rem; display:flex; gap:14px; flex-wrap:wrap; padding: var(--sm) var(--lg) var(--md); }
+  .legend span { display:inline-flex; align-items:center; gap:5px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo-mark">P</div>
+  <div class="brand">SmartPark <small>Simulasi Integrasi Sistem</small></div>
+  <div class="spacer"></div>
+  <div class="conn">
+    <span class="badge badge-err" style="font-size:0.6rem">● ANPR+OCR = REAL</span>
+    <span class="badge badge-info" style="font-size:0.6rem">○ Alur lain = SIMULASI</span>
+    <span class="badge" id="bgBackend"><span class="dot dot-mute"></span> BACKEND</span>
+    <button class="btn btn-ghost btn-sm" onclick="cfg.showModal()">⚙</button>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- LEFT: ANPR station (REAL) -->
+  <div class="col">
+    <div class="card">
+      <div class="card-head">
+        <h3>🎥 Stasiun ANPR <span class="step"><span class="tag-real">REAL</span></span></h3>
+        <span class="badge badge-info mono" id="phaseBadge">FASE: MASUK</span>
+      </div>
+      <div class="card-pad" style="padding-top: var(--md)">
+        <div class="cam-wrap">
+          <video id="cam" autoplay playsinline muted></video>
+          <img id="shot" style="display:none">
+          <div class="cam-off" id="camOff">KAMERA NONAKTIF<br><span style="font-size:0.72rem">Arahkan kamera device Anda ke plat nomor, atau pakai foto contoh di bawah</span></div>
+          <div class="scanline" id="scan" style="display:none"></div>
+          <div class="crosshair" id="cross" style="display:none"></div>
+          <div class="hud">
+            <div class="tl" id="hudGate">GATE-A-IN · ENTRY</div>
+            <div class="br" id="hudTime"></div>
+          </div>
+        </div>
+        <div class="controls">
+          <button class="btn btn-sm" id="camBtn" onclick="toggleCam()">AKTIFKAN KAMERA</button>
+          <select id="sampleSel" title="Foto contoh">
+            <option value="">— foto contoh —</option>
+            <option value="assets/samples/plat_putih_merah.jpg">Plat putih</option>
+            <option value="assets/samples/plat_merah_putih.jpg">Plat merah</option>
+            <option value="assets/samples/plat_hitam.png">Plat hitam</option>
+          </select>
+        </div>
+        <p class="dim" style="font-size:0.72rem; margin-top:8px">
+          Frame dikirim ke <span class="mono">POST /pipeline/verify</span> (YOLOv8 + OCR asli). Hasil deteksi menggerakkan seluruh alur di sebelah →
+        </p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3>🎯 Hasil Deteksi (Real)</h3></div>
+      <div class="card-pad" id="detResult">
+        <p class="dim" style="font-size:0.84rem">Belum ada deteksi. Mulai dengan tombol <b>PINDAI</b> di panel kontrol.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER: pipeline + controls -->
+  <div class="col">
+    <div class="card">
+      <div class="card-head"><h3>⚙️ Pipeline Integrasi</h3></div>
+      <div class="card-pad" style="padding-bottom: var(--sm)">
+        <div class="phase-tabs" id="phaseTabs">
+          <div class="on" data-phase="entry">① ALUR MASUK</div>
+          <div data-phase="exit">② ALUR KELUAR</div>
+        </div>
+      </div>
+      <div class="stepper card-pad" id="stepper" style="padding-top:0"></div>
+      <div class="legend">
+        <span><span class="tag-real">REAL</span> ANPR/OCR pakai kamera & model asli</span>
+        <span><span class="tag-sim">SIM</span> DB/GPS/gate/saldo disimulasikan</span>
+      </div>
+    </div>
+
+    <div class="card card-pad">
+      <span class="label">Kontrol Demo</span>
+      <div class="controls">
+        <button class="btn btn-primary" id="scanBtn" onclick="runScan()">🔍 PINDAI PLAT</button>
+        <button class="btn btn-ghost" id="resetBtn" onclick="resetAll()">↺ RESET</button>
+      </div>
+      <p class="dim" style="font-size:0.74rem; margin-top:10px" id="hint">
+        Fase MASUK: arahkan kamera ke plat lalu PINDAI → sistem deteksi plat → cek DB → cek GPS → palang buka → sesi parkir dimulai (biaya berjalan di app). Lalu pindah ke fase KELUAR untuk lihat pemotongan saldo.
+      </p>
+    </div>
+  </div>
+
+  <!-- RIGHT: ParkirBoss app replica -->
+  <div class="col phone-col">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-status"><span>9:41</span><span>📶 🔋 100%</span></div>
+      <div class="phone-body">
+        <div class="app-head">
+          <div class="avatar">RS</div>
+          <div class="who"><b>Rafi Satrio</b><span>ParkirBoss</span></div>
+        </div>
+
+        <div class="balance-card">
+          <div class="lbl">Saldo SmartPay</div>
+          <div class="amt" id="balAmt">Rp 50.000</div>
+          <div class="row">
+            <span class="chip" id="plateChip">— belum parkir —</span>
+            <button class="btn btn-accent btn-sm" style="box-shadow:none;border-width:2px" onclick="topUp()">+ TOP UP</button>
+          </div>
+        </div>
+
+        <div class="app-warn" id="appWarn">⚠️ <span id="warnText">SALDO TIDAK CUKUP untuk keluar</span></div>
+
+        <div class="app-section">Sesi Parkir</div>
+        <div id="sessionSlot">
+          <div class="app-empty" id="noSession">
+            <div class="big">🅿️</div>
+            <p style="margin-top:6px; font-size:0.82rem">Tidak ada sesi aktif</p>
+          </div>
+        </div>
+
+        <div class="app-section">Tracking Kendaraan</div>
+        <div class="tracking-card">
+          <div class="bar" id="trackBar">📍 Lokasi & Navigasi</div>
+          <div class="map">
+            <svg viewBox="0 0 300 168" id="mapSvg" preserveAspectRatio="none">
+              <!-- route path -->
+              <path id="route" d="M30,150 L30,90 L150,90 L150,60" fill="none" stroke="#6750A4" stroke-width="3" stroke-dasharray="6 6" opacity="0"/>
+              <!-- gate in -->
+              <rect x="14" y="140" width="32" height="20" rx="2" fill="#B6F2D2" stroke="#1D1B20" stroke-width="2"/>
+              <text x="30" y="154" font-size="8" text-anchor="middle" font-family="monospace" font-weight="700">IN</text>
+              <!-- gate out -->
+              <rect x="254" y="140" width="32" height="20" rx="2" fill="#FFDAD6" stroke="#1D1B20" stroke-width="2"/>
+              <text x="270" y="154" font-size="8" text-anchor="middle" font-family="monospace" font-weight="700">OUT</text>
+              <!-- parking lot -->
+              <rect x="110" y="34" width="80" height="56" rx="3" fill="#FDF7FF" stroke="#1D1B20" stroke-width="2"/>
+              <line x1="137" y1="34" x2="137" y2="90" stroke="#CBC4D2" stroke-width="1.5"/>
+              <line x1="163" y1="34" x2="163" y2="90" stroke="#CBC4D2" stroke-width="1.5"/>
+              <text x="150" y="28" font-size="8" text-anchor="middle" font-family="monospace" font-weight="700">PARKIR ITS</text>
+              <!-- car -->
+              <g id="car" class="car-dot" transform="translate(30,150)" opacity="0">
+                <rect x="-8" y="-5" width="16" height="10" rx="2" fill="#4F378A" stroke="#1D1B20" stroke-width="1.5"/>
+                <circle cx="0" cy="0" r="13" fill="#4F378A" opacity="0.18"/>
+              </g>
+            </svg>
+            <div class="gps-tag" id="gpsTag">-7.279594, 112.797377</div>
+          </div>
+        </div>
+
+        <div class="receipt" id="receipt">
+          <div class="bar">✓ Struk Digital</div>
+          <div class="inner">
+            <div class="kv"><span class="k">Plat</span><span class="v" id="rcPlate">—</span></div>
+            <div class="kv"><span class="k">Durasi</span><span class="v" id="rcDur">—</span></div>
+            <div class="kv"><span class="k">Tarif</span><span class="v">Rp 3.000/jam*</span></div>
+            <div class="kv total"><span class="k"><b>Total dipotong</b></span><span class="v big" id="rcTotal">—</span></div>
+            <div class="kv"><span class="k">Saldo akhir</span><span class="v" id="rcBal">—</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<dialog id="cfg">
+  <h3 style="margin-bottom:var(--md)">⚙ Konfigurasi</h3>
+  <div class="field" style="margin-bottom:var(--md)">
+    <span class="label">Base URL API (untuk ANPR real)</span>
+    <input id="baseUrlInput" value="http://localhost:8000">
+  </div>
+  <p class="dim" style="font-size:0.74rem; margin-bottom:var(--md)">Backend FastAPI dengan model ML aktif (ultralytics + easyocr). Jika offline, deteksi tidak jalan tapi alur simulasi tetap bisa diperagakan dengan plat manual.</p>
+  <div style="display:flex; gap:8px; justify-content:flex-end">
+    <button class="btn btn-ghost btn-sm" onclick="cfg.close()">TUTUP</button>
+    <button class="btn btn-primary btn-sm" onclick="saveCfg()">SIMPAN</button>
+  </div>
+</dialog>
+
+<div class="toast" id="toast"></div>
+<canvas id="snapCanvas" style="display:none"></canvas>
+
+<script>
+// ───────────────── Config & demo state ──────────────────
+const DEMO = {
+  ratePerHour: 3000,      // tarif demo
+  warp: 60,               // 1 detik nyata = 60 detik "parkir" (dipercepat utk demo)
+  gpsRadius: 15,
+  gateIn:  { id:'GATE-A-IN',  lat:-7.279594, lon:112.797377 },
+  gateOut: { id:'GATE-A-OUT', lat:-7.279700, lon:112.797500 },
+};
+let BASE = localStorage.getItem('sp_base') || 'http://localhost:8000';
+const cfg = document.getElementById('cfg'); $('baseUrlInput').value = BASE;
+
+let state = {
+  phase: 'entry',
+  balance: 50000,
+  plate: null,
+  color: null,
+  sessionStart: null,
+  costTimer: null,
+  cost: 0,
+  camStream: null,
+  backendOnline: false,
+  registered: ['B 1234 XYZ','L 1 AB','D 5678 KL'], // seed kendaraan terdaftar (mock)
+};
+
+function $(id){ return document.getElementById(id); }
+const rupiah = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+setInterval(()=> $('hudTime').textContent = new Date().toLocaleTimeString('id-ID',{hour12:false}), 1000);
+
+function toast(msg, kind='info') {
+  const el = document.createElement('div');
+  el.className = 'badge badge-' + (kind==='err'?'err':kind==='ok'?'ok':'info');
+  el.style.boxShadow='var(--shadow-sm)'; el.style.fontSize='0.82rem'; el.style.padding='10px 16px';
+  el.textContent = msg; $('toast').appendChild(el);
+  setTimeout(()=>{ el.style.transition='opacity .4s'; el.style.opacity='0'; setTimeout(()=>el.remove(),400); }, 3400);
+}
+function saveCfg(){ BASE = $('baseUrlInput').value.replace(/\/+$/,''); localStorage.setItem('sp_base',BASE); cfg.close(); checkBackend(); toast('Backend: '+BASE); }
+
+// ───────────────── Step definitions ─────────────────────
+const STEPS = {
+  entry: [
+    { t:'Sensor & Kamera Gate', tag:'real', d:'Kendaraan terdeteksi → kamera ambil frame' },
+    { t:'ANPR + OCR', tag:'real', d:'YOLOv8 deteksi plat → OCR baca nomor' },
+    { t:'DB Lookup', tag:'sim', d:'Cek kendaraan terdaftar di database' },
+    { t:'Cek Lokasi GPS', tag:'sim', d:'HP user dalam radius gate?' },
+    { t:'Palang Buka + Sesi Mulai', tag:'sim', d:'Status sesi = ACTIVE, biaya berjalan' },
+  ],
+  exit: [
+    { t:'Kamera Gate Keluar', tag:'real', d:'Kendaraan ke gate keluar → ambil frame' },
+    { t:'ANPR + OCR', tag:'real', d:'Baca ulang plat nomor' },
+    { t:'Cari Sesi ACTIVE', tag:'sim', d:'Cocokkan plat dengan sesi berjalan' },
+    { t:'Cek Lokasi GPS', tag:'sim', d:'HP user dalam radius gate keluar?' },
+    { t:'Cek Saldo', tag:'sim', d:'Saldo ≥ biaya parkir?' },
+    { t:'Potong Saldo + Palang Buka', tag:'sim', d:'Saldo dipotong, sesi selesai' },
+  ],
+};
+
+function renderStepper() {
+  const arr = STEPS[state.phase];
+  $('stepper').innerHTML = arr.map((s,i)=>`
+    <div class="step" id="st${i}">
+      <div class="num">${i+1}</div>
+      <div class="body">
+        <b>${s.t}</b>${s.tag==='real'?'<span class="tag-real">REAL</span>':'<span class="tag-sim">SIM</span>'}
+        <div class="desc">${s.d}</div>
+        <div class="res" id="res${i}"></div>
+      </div>
+    </div>`).join('');
+}
+function setStep(i, st, res) {
+  const el = $('st'+i); if(!el) return;
+  el.className = 'step ' + st;
+  if (res!==undefined) $('res'+i).innerHTML = res;
+}
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+
+// ───────────────── Phase tabs ───────────────────────────
+$('phaseTabs').addEventListener('click', e=>{
+  const d = e.target.closest('[data-phase]'); if(!d) return;
+  if (d.dataset.phase==='exit' && !state.sessionStart) return toast('Belum ada sesi aktif — jalankan ALUR MASUK dulu','err');
+  setPhase(d.dataset.phase);
+});
+function setPhase(p) {
+  state.phase = p;
+  [...$('phaseTabs').children].forEach(c=>c.classList.toggle('on', c.dataset.phase===p));
+  const g = p==='entry' ? DEMO.gateIn : DEMO.gateOut;
+  $('hudGate').textContent = `${g.id} · ${p.toUpperCase()}`;
+  $('phaseBadge').textContent = 'FASE: ' + (p==='entry'?'MASUK':'KELUAR');
+  $('gpsTag').textContent = `${g.lat}, ${g.lon}`;
+  renderStepper();
+  $('scanBtn').innerHTML = p==='entry' ? '🔍 PINDAI PLAT MASUK' : '🔍 PINDAI PLAT KELUAR';
+}
+
+// ───────────────── Camera ───────────────────────────────
+async function toggleCam(){
+  if (state.camStream){ state.camStream.getTracks().forEach(t=>t.stop()); state.camStream=null;
+    $('cam').srcObject=null; $('camOff').style.display='grid'; $('scan').style.display='none'; $('cross').style.display='none';
+    $('camBtn').textContent='AKTIFKAN KAMERA'; return; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    const errorMsg = 'Fitur kamera tidak tersedia karena masalah keamanan browser. Akses kamera (getUserMedia) hanya diizinkan melalui localhost atau koneksi aman (HTTPS).';
+    toast(errorMsg, 'err');
+    alert('Gagal mengakses kamera:\n\n' + errorMsg);
+    return;
+  }
+  try {
+    state.camStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' }, audio:false });
+    $('cam').srcObject = state.camStream; $('cam').style.display='block'; $('shot').style.display='none';
+    $('camOff').style.display='none'; $('scan').style.display='block'; $('cross').style.display='block';
+    $('camBtn').textContent='MATIKAN KAMERA';
+  } catch(e){ toast('Kamera tidak tersedia: '+e.message,'err'); }
+}
+function snapshotBlob(){
+  return new Promise(res=>{ const v=$('cam'),c=$('snapCanvas');
+    c.width=v.videoWidth||1280; c.height=v.videoHeight||720;
+    c.getContext('2d').drawImage(v,0,0,c.width,c.height); c.toBlob(b=>res(b),'image/jpeg',0.9); });
+}
+async function sampleBlob(url){ const r = await fetch(url); return await r.blob(); }
+
+// ───────────────── Backend health ───────────────────────
+async function checkBackend(){
+  try {
+    const r = await fetch(BASE+'/health',{signal:AbortSignal.timeout(2500)});
+    const h = await r.json(); state.backendOnline = !!h.anpr_model_loaded;
+    const el=$('bgBackend'), dot=el.querySelector('.dot');
+    if (h.anpr_model_loaded){ dot.className='dot dot-ok'; el.className='badge badge-ok'; el.lastChild.textContent=' ANPR SIAP'; }
+    else { dot.className='dot dot-warn'; el.className='badge badge-warn'; el.lastChild.textContent=' MODEL ✗'; }
+  } catch {
+    state.backendOnline=false; const el=$('bgBackend'); el.querySelector('.dot').className='dot dot-err';
+    el.className='badge badge-err'; el.lastChild.textContent=' OFFLINE';
+  }
+}
+
+// ───────────────── REAL ANPR call ───────────────────────
+async function realDetect() {
+  let blob;
+  const sample = $('sampleSel').value;
+  if (sample) blob = await sampleBlob(sample);
+  else if (state.camStream) blob = await snapshotBlob();
+  else { toast('Aktifkan kamera atau pilih foto contoh','err'); return null; }
+
+  // freeze frame preview
+  const url = URL.createObjectURL(blob);
+  $('shot').src = url; $('shot').style.display='block'; $('cam').style.display='none';
+
+  if (!state.backendOnline) {
+    toast('Backend ANPR offline — pakai plat manual untuk lanjut simulasi','err');
+    const manual = prompt('Backend ANPR tidak aktif. Masukkan plat manual untuk lanjut simulasi:', 'B 1234 XYZ');
+    if (!manual) return null;
+    return { plate: manual.toUpperCase().trim(), color:'unknown', conf:0, ocr:0, decision:'GRANTED', sim:true };
+  }
+
+  const fd = new FormData(); fd.append('file', blob, 'frame.jpg');
+  const r = await fetch(BASE+'/pipeline/verify', { method:'POST', body: fd });
+  if (!r.ok) throw new Error((await r.json().catch(()=>({}))).detail || ('HTTP '+r.status));
+  const data = await r.json();
+  const res = (data.results||[])[0];
+  if (!res || !res.plate_text) return { plate:'', color:'unknown', conf:0, ocr:0, decision:'DENIED', empty:true };
+  return {
+    plate: (res.plate?.normalized_plate || res.plate_text || '').toUpperCase(),
+    color: res.vehicle?.color || 'unknown',
+    conf: res.plate_confidence || 0,
+    ocr: res.ocr_confidence || 0,
+    decision: res.access?.decision || 'DENIED',
+    ms: data.processing_time_ms,
+  };
+}
+
+function showDetection(d) {
+  $('detResult').innerHTML = `
+    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap">
+      <span class="plate">${d.plate||'TAK TERBACA'}</span>
+      <span class="badge ${d.conf>=0.5?'badge-ok':'badge-warn'}">conf ${Math.round((d.conf||0)*100)}%</span>
+    </div>
+    <div class="kv" style="margin-top:10px"><span class="k">Warna kendaraan</span><span class="v">${d.color||'-'}</span></div>
+    <div class="kv"><span class="k">OCR confidence</span><span class="v">${Math.round((d.ocr||0)*100)}%</span></div>
+    <div class="kv"><span class="k">Waktu proses</span><span class="v">${d.ms?d.ms.toFixed(0)+' ms':'-'}</span></div>
+    ${d.sim?'<p class="dim" style="font-size:0.72rem;margin-top:8px">⚠️ plat manual (backend ANPR offline)</p>':''}`;
+}
+
+// ───────────────── Flow runner ──────────────────────────
+let busy = false;
+async function runScan(){
+  if (busy) return; busy = true; $('scanBtn').disabled = true;
+  try { state.phase==='entry' ? await runEntry() : await runExit(); }
+  catch(e){ toast('Error: '+e.message,'err'); }
+  finally { busy=false; $('scanBtn').disabled=false; }
+}
+
+async function runEntry(){
+  renderStepper();
+  // 1 capture
+  setStep(0,'active','📸 menangkap frame…'); await sleep(500);
+  // 2 ANPR
+  setStep(0,'done','frame ditangkap ✓'); setStep(1,'active','⏳ menjalankan YOLOv8 + OCR…');
+  const d = await realDetect();
+  if (!d){ setStep(1,'fail','dibatalkan'); return; }
+  showDetection(d);
+  if (d.empty){ setStep(1,'fail','plat tidak terbaca — coba lagi / foto lain'); toast('Plat tidak terdeteksi','err'); return; }
+  setStep(1,'done',`plat: <b>${d.plate}</b> · conf ${Math.round(d.conf*100)}%`);
+  state.plate = d.plate; state.color = d.color;
+  await sleep(400);
+  // 3 DB lookup (sim) — auto-register detected plate so demo flows
+  setStep(2,'active','mencari di database…'); await sleep(700);
+  if (!state.registered.includes(d.plate)) state.registered.push(d.plate);
+  setStep(2,'done',`✓ terdaftar a/n Rafi Satrio`);
+  // 4 GPS (sim)
+  setStep(3,'active','memeriksa lokasi HP…'); await sleep(700);
+  setStep(3,'done',`✓ dalam radius ${DEMO.gpsRadius}m dari ${DEMO.gateIn.id}`);
+  // 5 gate + session
+  setStep(4,'active','membuka palang…'); await sleep(600);
+  startSession(d.plate);
+  setStep(4,'done','✅ PALANG TERBUKA · sesi ACTIVE');
+  toast('Kendaraan masuk — sesi dimulai','ok');
+  $('hint').innerHTML = 'Sesi aktif. Biaya berjalan di app (kanan). Pindah ke tab <b>② ALUR KELUAR</b> lalu PINDAI lagi untuk melihat <b>pemotongan saldo</b>.';
+}
+
+async function runExit(){
+  renderStepper();
+  setStep(0,'active','📸 menangkap frame…'); await sleep(500);
+  setStep(0,'done','frame ditangkap ✓'); setStep(1,'active','⏳ ANPR + OCR…');
+  const d = await realDetect();
+  if (!d){ setStep(1,'fail','dibatalkan'); return; }
+  showDetection(d);
+  if (d.empty){ setStep(1,'fail','plat tidak terbaca'); return; }
+  setStep(1,'done',`plat: <b>${d.plate}</b>`);
+  await sleep(400);
+  // 3 find active session
+  setStep(2,'active','mencari sesi aktif…'); await sleep(700);
+  const match = state.plate && (d.plate===state.plate);
+  if (!match){
+    setStep(2,'fail',`tidak ada sesi untuk ${d.plate} (sesi aktif: ${state.plate||'-'})`);
+    toast('Plat keluar ≠ plat masuk → palang tetap tutup','err'); return;
+  }
+  setStep(2,'done',`✓ sesi ditemukan untuk ${d.plate}`);
+  // 4 GPS
+  setStep(3,'active','memeriksa lokasi…'); await sleep(600);
+  setStep(3,'done',`✓ dalam radius ${DEMO.gpsRadius}m dari ${DEMO.gateOut.id}`);
+  // 5 check balance
+  const total = currentCost();
+  setStep(4,'active',`biaya ${rupiah(total)} vs saldo ${rupiah(state.balance)}…`); await sleep(700);
+  if (state.balance < total){
+    setStep(4,'fail',`❌ saldo kurang (${rupiah(state.balance)} < ${rupiah(total)})`);
+    setStep(5,'fail','⛔ PALANG TETAP TUTUP');
+    showWarn(`SALDO TIDAK CUKUP — perlu ${rupiah(total)}`);
+    toast('Saldo tidak cukup — silakan TOP UP lalu pindai lagi','err'); return;
+  }
+  setStep(4,'done','✓ saldo mencukupi');
+  // 6 deduct + gate
+  setStep(5,'active','memotong saldo…'); await sleep(500);
+  finishSession(total, d.plate);
+  setStep(5,'done',`✅ dipotong ${rupiah(total)} · PALANG TERBUKA`);
+  toast(`Saldo dipotong ${rupiah(total)}`,'ok');
+  $('hint').innerHTML = 'Selesai! Saldo terpotong & struk muncul di app. Tekan <b>RESET</b> untuk mengulang demo.';
+}
+
+// ───────────────── Session / cost ───────────────────────
+function currentCost(){
+  if (!state.sessionStart) return 0;
+  const realSec = (Date.now()-state.sessionStart)/1000;
+  const parkedSec = realSec * DEMO.warp;
+  const hours = parkedSec/3600;
+  return Math.max(DEMO.ratePerHour, Math.ceil(hours* DEMO.ratePerHour /100)*100);
+}
+function fmtDur(){
+  const realSec=(Date.now()-state.sessionStart)/1000; const p=Math.floor(realSec*DEMO.warp);
+  const h=Math.floor(p/3600), m=Math.floor((p%3600)/60);
+  return (h?h+'j ':'')+m+'m';
+}
+function startSession(plate){
+  state.sessionStart = Date.now();
+  $('plateChip').textContent = plate;
+  $('noSession').style.display='none';
+  $('sessionSlot').insertAdjacentHTML('beforeend', `
+    <div class="session-card" id="sessCard">
+      <div class="bar"><span>● AKTIF</span><span id="sessDur">0m</span></div>
+      <div class="inner">
+        <div class="kv"><span class="k">Plat</span><span class="v">${plate}</span></div>
+        <div class="kv"><span class="k">Lokasi</span><span class="v">Parkir ITS Pusat</span></div>
+        <div class="kv"><span class="k">Biaya berjalan</span><span class="cost-live" id="liveCost">Rp 3.000</span></div>
+      </div>
+    </div>`);
+  // tracking: car moves in → slot
+  moveCar([[30,150],[30,90],[150,90],[150,60]], true);
+  $('trackBar').textContent = '📍 Menuju slot parkir…';
+  state.costTimer = setInterval(()=>{
+    state.cost = currentCost();
+    const lc=$('liveCost'); if(lc) lc.textContent = rupiah(state.cost);
+    const sd=$('sessDur'); if(sd) sd.textContent = fmtDur();
+    if (state.cost > state.balance) showWarn('SALDO TIDAK CUKUP untuk keluar');
+  }, 1000);
+}
+function finishSession(total, plate){
+  clearInterval(state.costTimer); state.costTimer=null;
+  const dur = fmtDur();
+  // deduct balance with flash
+  state.balance -= total;
+  flashBalance();
+  $('balAmt').textContent = rupiah(state.balance);
+  hideWarn();
+  // remove session card
+  $('sessCard')?.remove(); $('noSession').style.display='block';
+  $('plateChip').textContent='— selesai —';
+  // tracking: slot → out
+  moveCar([[150,60],[150,90],[270,90],[270,150]], false);
+  $('trackBar').textContent = '🏁 Keluar via GATE-A-OUT';
+  // receipt
+  $('rcPlate').textContent=plate; $('rcDur').textContent=dur;
+  $('rcTotal').textContent=rupiah(total); $('rcBal').textContent=rupiah(state.balance);
+  $('receipt').classList.add('show');
+  state.sessionStart=null;
+}
+
+// ───────────────── App UI bits ──────────────────────────
+function flashBalance(){ const a=$('balAmt'); a.classList.add('flash-down'); setTimeout(()=>a.classList.remove('flash-down'),900); }
+function showWarn(t){ $('warnText').textContent=t; $('appWarn').classList.add('show'); }
+function hideWarn(){ $('appWarn').classList.remove('show'); }
+function topUp(){ state.balance += 50000; $('balAmt').textContent=rupiah(state.balance); flashBalance(); hideWarn(); toast('Top up Rp 50.000','ok'); }
+
+// ───────────────── Tracking animation ───────────────────
+function moveCar(points, show){
+  const car=$('car'), route=$('route');
+  car.setAttribute('opacity','1'); route.setAttribute('opacity','0.8');
+  // build route path
+  route.setAttribute('d', 'M'+points.map(p=>p.join(',')).join(' L'));
+  let i=0;
+  car.setAttribute('transform',`translate(${points[0][0]},${points[0][1]})`);
+  const step=()=>{ i++; if(i>=points.length){ if(show){ car.animate([{opacity:1},{opacity:0.6},{opacity:1}],{duration:1500,iterations:Infinity}); } return; }
+    car.setAttribute('transform',`translate(${points[i][0]},${points[i][1]})`); setTimeout(step,1000); };
+  setTimeout(step,300);
+}
+
+// ───────────────── Reset ────────────────────────────────
+function resetAll(){
+  clearInterval(state.costTimer);
+  state = { ...state, phase:'entry', balance:50000, plate:null, color:null, sessionStart:null, costTimer:null, cost:0 };
+  $('balAmt').textContent=rupiah(50000); $('plateChip').textContent='— belum parkir —';
+  $('sessCard')?.remove(); $('noSession').style.display='block';
+  $('receipt').classList.remove('show'); hideWarn();
+  $('detResult').innerHTML='<p class="dim" style="font-size:0.84rem">Belum ada deteksi.</p>';
+  $('shot').style.display='none'; if(state.camStream) $('cam').style.display='block';
+  $('car').setAttribute('opacity','0'); $('route').setAttribute('opacity','0'); $('trackBar').textContent='📍 Lokasi & Navigasi';
+  setPhase('entry'); $('hint').textContent='Demo di-reset. Mulai lagi dari ALUR MASUK.';
+  toast('Demo di-reset','ok');
+}
+
+// ───────────────── Init ─────────────────────────────────
+renderStepper(); setPhase('entry'); checkBackend(); setInterval(checkBackend, 6000);
+</script>
+</body>
+</html>

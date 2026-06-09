@@ -1,0 +1,1540 @@
+/* 
+  Parkir Boss Web Demo — Styling
+  Theme: Neo-Brutalist (Design Tokens matching Stitch / Flutter)
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;800;900&family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+:root {
+  /* Colors */
+  --primary: #4F378A;
+  --on-primary: #FFFFFF;
+  --primary-container: #6750A4;
+  --on-primary-container: #E0D2FF;
+  --primary-fixed: #E9DDFF;
+  --primary-fixed-dim: #CFBCFF;
+
+  --secondary: #63597C;
+  --on-secondary: #FFFFFF;
+  --secondary-container: #E1D4FD;
+  --on-secondary-container: #645A7D;
+
+  --tertiary: #765B00;
+  --on-tertiary: #FFFFFF;
+  --tertiary-container: #C9A74D;
+  --on-tertiary-container: #503D00;
+  --tertiary-fixed: #FFDF93;
+  --tertiary-fixed-dim: #E7C365;
+
+  --surface: #FDF7FF;
+  --on-surface: #1D1B20;
+  --surface-variant: #E6E0E9;
+  --on-surface-variant: #494551;
+  --surface-dim: #DED8E0;
+  --surface-bright: #FDF7FF;
+  --surface-container-lowest: #FFFFFF;
+  --surface-container-low: #F8F2FA;
+  --surface-container: #F2ECF4;
+  --surface-container-high: #ECE6EE;
+  --surface-container-highest: #E6E0E9;
+  
+  --background: #FDF7FF;
+  --on-background: #1D1B20;
+  --inverse-surface: #322F35;
+  --inverse-on-surface: #F5EFF7;
+
+  --error: #BA1A1A;
+  --on-error: #FFFFFF;
+  --error-container: #FFDAD6;
+  --on-error-container: #93000a;
+  
+  --success: #00E676;
+  --on-success: #1D1B20;
+
+  --outline: #7A7582;
+  --outline-variant: #CBC4D2;
+
+  /* Shadows */
+  --neo-shadow-sm: 2px 2px 0px 0px var(--on-background);
+  --neo-shadow: 4px 4px 0px 0px var(--on-background);
+  --neo-shadow-lg: 8px 8px 0px 0px var(--on-background);
+  --neo-shadow-btn: 6px 6px 0px 0px var(--on-background);
+
+  /* Fonts */
+  --font-heading: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'Fira Code', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--background);
+  color: var(--on-background);
+  min-height: 100vh;
+  display: flex;
+  flex-col: column;
+  flex-direction: column;
+  overflow-x: hidden;
+  
+  /* Brutalist Dot Pattern Background */
+  background-image: radial-gradient(var(--outline-variant) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface-container-low);
+  border-left: 3px solid var(--on-background);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--secondary);
+  border: 2px solid var(--on-background);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* Header */
+header.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background-color: var(--surface-container-lowest);
+  border-bottom: 4px solid var(--on-background);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+header.app-header .logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+header.app-header .logo-icon {
+  background-color: var(--primary);
+  color: var(--on-primary);
+  width: 42px;
+  height: 42px;
+  border: 3px solid var(--on-background);
+  box-shadow: var(--neo-shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-weight: 900;
+  font-size: 24px;
+  font-style: italic;
+}
+
+header.app-header h1 {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 900;
+  font-style: italic;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+}
+
+header.app-header h1 span {
+  color: var(--tertiary-container);
+  -webkit-text-stroke: 1px var(--on-background);
+}
+
+header.app-header .header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* Buttons (Brutalist style) */
+.btn-brutalist {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  border: 3px solid var(--on-background);
+  background-color: var(--surface);
+  color: var(--on-background);
+  box-shadow: var(--neo-shadow-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.btn-brutalist:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px var(--on-background);
+}
+
+.btn-brutalist.primary {
+  background-color: var(--primary);
+  color: var(--on-primary);
+}
+
+.btn-brutalist.tertiary {
+  background-color: var(--tertiary-fixed);
+}
+
+.btn-brutalist.error {
+  background-color: var(--error-container);
+  color: var(--on-error-container);
+}
+
+/* Dashboard Columns */
+.dashboard-container {
+  display: grid;
+  grid-template-columns: 360px 420px 1fr;
+  gap: 24px;
+  padding: 24px;
+  flex: 1;
+  max-width: 1600px;
+  width: 100%;
+  margin: 0 auto;
+  align-items: start;
+}
+
+@media (max-width: 1200px) {
+  .dashboard-container {
+    grid-template-columns: 1fr 1fr;
+  }
+  .column-admin {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 800px) {
+  .dashboard-container {
+    grid-template-columns: 1fr;
+  }
+  .column-admin, .column-phone, .column-cctv {
+    grid-column: span 1;
+  }
+}
+
+/* Column Wrappers */
+.column-title {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.column-title span.badge {
+  font-size: 12px;
+  padding: 2px 6px;
+  background-color: var(--primary-fixed);
+  border: 2px solid var(--on-background);
+  border-radius: 4px;
+}
+
+.card-brutalist {
+  background-color: var(--surface-container-lowest);
+  border: 4px solid var(--on-background);
+  box-shadow: var(--neo-shadow);
+  padding: 16px;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.card-title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 16px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  border-bottom: 3px solid var(--on-background);
+  padding-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Column 1: CCTV Simulator */
+.cctv-screen {
+  width: 100%;
+  height: 200px;
+  background-color: #0c0812;
+  border: 3px solid var(--on-background);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cctv-screen img.car-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.85;
+}
+
+.cctv-screen video.camera-feed {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.85;
+  display: none;
+}
+
+.cctv-scanner-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: var(--success);
+  box-shadow: 0 0 8px var(--success);
+  animation: scan 3s linear infinite;
+  z-index: 2;
+}
+
+@keyframes scan {
+  0% { top: 0; }
+  50% { top: 100%; }
+  100% { top: 0; }
+}
+
+.cctv-overlay {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: var(--success);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-shadow: 1px 1px 0px #000;
+  z-index: 3;
+}
+
+.cctv-corner-brackets {
+  position: absolute;
+  width: 60%;
+  height: 40px;
+  border: 2px solid var(--success);
+  border-top: none;
+  border-bottom: none;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.cctv-corner-brackets::before, .cctv-corner-brackets::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 10px;
+  border: 2px solid var(--success);
+  border-left: none;
+  border-right: none;
+}
+.cctv-corner-brackets::before { top: 0; }
+.cctv-corner-brackets::after { bottom: 0; }
+
+.cctv-gate-indicator {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background-color: var(--on-background);
+  color: var(--on-primary);
+  border: 2px solid var(--success);
+  padding: 2px 6px;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 12px;
+  z-index: 3;
+}
+
+.cctv-gate-indicator.closed {
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.plate-ocr-box {
+  background-color: var(--surface-container);
+  border: 2px solid var(--on-background);
+  padding: 8px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 2px;
+  margin-bottom: 16px;
+}
+
+/* Live Camera Enhancements */
+.cctv-screen video.camera-feed {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.9;
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.cctv-detect-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.cctv-detect-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(12, 8, 18, 0.92));
+  padding: 24px 10px 8px 10px;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  z-index: 5;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.cctv-detect-bar.show {
+  display: flex;
+}
+
+.cctv-detect-plate {
+  font-weight: 700;
+  font-size: 14px;
+  color: #fff;
+  letter-spacing: 1px;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 2px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.cctv-detect-conf {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 10px;
+  flex: 1;
+}
+
+.cctv-detect-badge {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 10px;
+  padding: 2px 8px;
+  border: 2px solid;
+  text-transform: uppercase;
+}
+
+.cctv-detect-badge.granted {
+  color: var(--success);
+  border-color: var(--success);
+  background: rgba(0, 230, 118, 0.15);
+}
+
+.cctv-detect-badge.denied {
+  color: var(--error);
+  border-color: var(--error);
+  background: rgba(186, 26, 26, 0.15);
+}
+
+/* Live Camera Controls */
+.cctv-live-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.cctv-live-controls .btn-brutalist {
+  font-size: 11px;
+  padding: 6px 10px;
+}
+
+.cctv-autoscan-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 10px;
+  text-transform: uppercase;
+  padding: 6px 8px;
+  border: 2px solid var(--on-background);
+  background: var(--surface-container);
+  box-shadow: var(--neo-shadow-sm);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.cctv-autoscan-toggle input[type="checkbox"] {
+  accent-color: var(--primary);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+.cctv-autoscan-toggle:has(input:checked) {
+  background-color: var(--primary-fixed);
+  border-color: var(--primary);
+}
+
+/* Live indicator pulse */
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.cctv-screen.live-active .cctv-scanner-line {
+  background-color: #ff1744;
+  box-shadow: 0 0 12px #ff1744;
+  animation: scan 1.5s linear infinite;
+}
+
+.cctv-screen.live-active .cctv-overlay::before {
+  content: "● LIVE";
+  color: #ff1744;
+  font-weight: 700;
+  margin-right: 6px;
+  animation: live-pulse 1s ease-in-out infinite;
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-label {
+  display: block;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.select-brutalist, .input-brutalist {
+  width: 100%;
+  padding: 8px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  border: 3px solid var(--on-background);
+  background-color: var(--surface-container-lowest);
+  outline: none;
+  box-shadow: var(--neo-shadow-sm);
+}
+
+.select-brutalist:focus, .input-brutalist:focus {
+  background-color: var(--primary-fixed);
+}
+
+.car-presets {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.car-preset-btn {
+  border: 2px solid var(--on-background);
+  background: var(--surface-container);
+  padding: 6px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 12px;
+  box-shadow: 2px 2px 0px var(--on-background);
+}
+
+.car-preset-btn.active {
+  background-color: var(--tertiary-fixed);
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px var(--on-background);
+}
+
+.car-preset-btn .plate {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 13px;
+  display: block;
+}
+
+.gps-toggle {
+  display: flex;
+  border: 3px solid var(--on-background);
+  margin-bottom: 16px;
+  box-shadow: var(--neo-shadow-sm);
+}
+
+.gps-toggle-btn {
+  flex: 1;
+  border: none;
+  background-color: var(--surface-container);
+  padding: 6px 12px;
+  cursor: pointer;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.gps-toggle-btn:not(:last-child) {
+  border-right: 3px solid var(--on-background);
+}
+
+.gps-toggle-btn.active {
+  background-color: var(--success);
+  color: var(--on-success);
+}
+
+.gps-toggle-btn.active.far {
+  background-color: var(--error);
+  color: var(--on-error);
+}
+
+/* Column 2: Mobile Phone Frame Simulator */
+.phone-container {
+  width: 100%;
+  max-width: 380px;
+  height: 760px;
+  background-color: var(--on-background);
+  border: 12px solid var(--on-background);
+  border-radius: 40px;
+  box-shadow: var(--neo-shadow-lg);
+  overflow: hidden;
+  position: relative;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Speaker Notch */
+.phone-notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140px;
+  height: 20px;
+  background-color: var(--on-background);
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  z-index: 50;
+}
+
+.phone-screen {
+  flex: 1;
+  background-color: var(--surface);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-top: 24px; /* Notch space */
+}
+
+/* Phone Status Bar */
+.phone-status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 20px;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--on-background);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 40;
+}
+
+.phone-status-bar .icons {
+  display: flex;
+  gap: 4px;
+}
+
+.phone-app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 3px solid var(--on-background);
+  background-color: var(--surface-container-lowest);
+}
+
+.phone-app-header h2 {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 900;
+  font-style: italic;
+  text-transform: uppercase;
+}
+
+.phone-content-area {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.phone-screen-view {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+  padding: 16px;
+}
+
+.phone-screen-view.active {
+  display: flex;
+}
+
+/* Phone Nav Bar */
+.phone-nav-bar {
+  display: flex;
+  border-top: 3px solid var(--on-background);
+  background-color: var(--surface-container-low);
+  z-index: 10;
+}
+
+.phone-nav-btn {
+  flex: 1;
+  border: none;
+  background: none;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 10px;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: var(--on-surface-variant);
+  transition: color 0.1s, background-color 0.1s;
+}
+
+.phone-nav-btn:not(:last-child) {
+  border-right: 2px solid var(--on-background);
+}
+
+.phone-nav-btn.active {
+  background-color: var(--primary-fixed);
+  color: var(--primary);
+}
+
+.phone-nav-btn i.material-icons {
+  font-size: 20px;
+  margin-bottom: 2px;
+}
+
+/* Mobile Screens Styles */
+/* Dashboard view styling */
+.phone-balance-card {
+  background-color: var(--primary);
+  color: var(--on-primary);
+  border: 3px solid var(--on-background);
+  box-shadow: var(--neo-shadow);
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.phone-balance-card .wallet-bg-icon {
+  position: absolute;
+  right: -10px;
+  top: -10px;
+  font-size: 72px;
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.phone-balance-card .label {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary-fixed-dim);
+  letter-spacing: 0.5px;
+}
+
+.phone-balance-card .amount {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 900;
+  margin: 4px 0 12px 0;
+}
+
+.phone-session-card {
+  background-color: var(--surface-container-lowest);
+  border: 3px solid var(--on-background);
+  box-shadow: var(--neo-shadow);
+  margin-bottom: 16px;
+}
+
+.phone-session-card .header {
+  background-color: var(--surface-variant);
+  border-bottom: 3px solid var(--on-background);
+  padding: 6px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.phone-session-card .status-dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--success);
+  border: 1.5px solid var(--on-background);
+  display: inline-block;
+  margin-right: 4px;
+}
+
+.phone-session-card .timer-badge {
+  background-color: var(--on-background);
+  color: var(--surface);
+  padding: 2px 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.phone-session-card .body {
+  padding: 12px;
+}
+
+.phone-session-card .plate-num {
+  display: inline-block;
+  border: 2px solid var(--on-background);
+  padding: 2px 6px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 13px;
+  margin-right: 12px;
+}
+
+.phone-session-card .cost {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  color: var(--tertiary);
+}
+
+.phone-session-card .btn-details {
+  width: 100%;
+  margin-top: 10px;
+  font-size: 11px;
+}
+
+.phone-no-session {
+  background-color: var(--surface);
+  border: 3px solid var(--on-background);
+  box-shadow: var(--neo-shadow);
+  padding: 20px;
+  text-align: center;
+  color: var(--on-surface-variant);
+  margin-bottom: 16px;
+}
+
+.phone-no-session i {
+  font-size: 36px;
+  margin-bottom: 8px;
+}
+
+.phone-nearby-section-title {
+  border-left: 6px solid var(--tertiary);
+  padding-left: 8px;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.phone-nearby-item {
+  border: 3px solid var(--on-background);
+  box-shadow: 2px 2px 0px var(--on-background);
+  padding: 10px;
+  margin-bottom: 8px;
+  background-color: var(--surface-container-lowest);
+}
+
+.phone-nearby-item .header {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.phone-nearby-item .badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border: 2px solid var(--on-background);
+  background-color: var(--secondary-container);
+}
+
+.phone-nearby-item .progress-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.phone-nearby-item .progress-bar {
+  flex: 1;
+  height: 12px;
+  background-color: var(--surface-variant);
+  border: 2px solid var(--on-background);
+  position: relative;
+  overflow: hidden;
+}
+
+.phone-nearby-item .progress-fill {
+  height: 100%;
+  background-color: var(--tertiary-container);
+}
+
+.phone-nearby-item .progress-fill.full {
+  background-color: var(--error);
+}
+
+.phone-nearby-item .slot-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  width: 50px;
+  text-align: right;
+}
+
+.phone-promo-banner {
+  background-color: var(--tertiary);
+  border: 3px solid var(--on-background);
+  box-shadow: var(--neo-shadow);
+  padding: 14px;
+  color: var(--on-tertiary);
+  position: relative;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.phone-promo-banner i {
+  position: absolute;
+  right: -20px;
+  bottom: -20px;
+  font-size: 80px;
+  opacity: 0.15;
+}
+
+.phone-promo-banner .tag {
+  background-color: var(--on-background);
+  color: var(--surface);
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 9px;
+  font-weight: 700;
+  font-family: var(--font-heading);
+  margin-bottom: 6px;
+}
+
+.phone-promo-banner h3 {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+/* Floor selector tabs in Slot Screen */
+.phone-floor-tabs {
+  display: flex;
+  border-bottom: 3px solid var(--on-background);
+  margin-bottom: 12px;
+  padding-bottom: 4px;
+}
+
+.phone-floor-tab {
+  padding: 4px 10px;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 11px;
+  border: 2px solid var(--on-background);
+  background-color: var(--surface-container);
+  cursor: pointer;
+  margin-right: 6px;
+}
+
+.phone-floor-tab.active {
+  background-color: var(--tertiary);
+  color: var(--on-tertiary);
+  box-shadow: 2px 2px 0px var(--on-background);
+  transform: translateY(-2px);
+}
+
+/* Slot Map Grid in Mobile App */
+.phone-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr) 24px repeat(2, 1fr);
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.phone-slot-cell {
+  height: 50px;
+  border: 2px solid var(--on-background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  background-color: var(--surface-container-lowest);
+  position: relative;
+}
+
+.phone-slot-cell.occupied {
+  background-color: var(--error-container);
+  color: var(--on-error-container);
+  cursor: not-allowed;
+}
+
+.phone-slot-cell.recommended {
+  background-color: var(--tertiary-fixed);
+}
+
+.phone-slot-cell.selected {
+  background-color: var(--primary-fixed);
+  box-shadow: 2px 2px 0px var(--on-background);
+  transform: translateY(-2px);
+}
+
+.phone-slot-cell .recommended-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: var(--secondary);
+  color: var(--on-secondary);
+  font-size: 7px;
+  padding: 1px 2px;
+  border-left: 1px solid var(--on-background);
+  border-bottom: 1px solid var(--on-background);
+}
+
+.road-middle {
+  background-color: var(--on-background);
+  position: relative;
+  grid-column: 3;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.road-middle::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  border-left: 2px dashed var(--surface);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.exit-path-span {
+  grid-row: span 2;
+  grid-column: 5;
+  background-color: var(--surface-variant);
+  border: 2px solid var(--on-background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 10px;
+  text-align: center;
+  writing-mode: vertical-rl;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+  letter-spacing: 1px;
+}
+
+
+.phone-slot-details-sheet {
+  background-color: var(--surface-container-low);
+  border: 3px solid var(--on-background);
+  box-shadow: var(--neo-shadow-sm);
+  padding: 12px;
+  margin-top: auto;
+}
+
+.phone-slot-details-sheet h4 {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+/* Profile / Wallet Actions */
+.phone-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  border-bottom: 2px solid var(--on-background);
+  padding-bottom: 12px;
+}
+
+.phone-profile-avatar {
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--on-background);
+  background-color: var(--tertiary-fixed);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.phone-profile-info h3 {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.phone-profile-info p {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+}
+
+.phone-vehicles-list {
+  margin-bottom: 16px;
+}
+
+.phone-vehicle-item {
+  border: 2px solid var(--on-background);
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--surface-container-lowest);
+}
+
+.phone-vehicle-item .plate {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* History transactions */
+.phone-history-item {
+  border-bottom: 2px solid var(--outline-variant);
+  padding: 10px 0;
+}
+
+.phone-history-item:last-child {
+  border-bottom: none;
+}
+
+.phone-history-item .row1 {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.phone-history-item .row2 {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  margin-top: 4px;
+}
+
+.phone-history-item .amount.negative {
+  color: var(--error);
+}
+
+.phone-history-item .amount.positive {
+  color: var(--tertiary);
+}
+
+/* Sub-screens like Top Up & Success animation overlay */
+.phone-modal-screen {
+  position: absolute;
+  top: 24px;
+  left: 0;
+  width: 100%;
+  height: calc(100% - 24px);
+  background-color: var(--surface);
+  z-index: 30;
+  display: none;
+  flex-direction: column;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.phone-modal-screen.active {
+  display: flex;
+}
+
+.phone-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  border-bottom: 3px solid var(--on-background);
+  padding-bottom: 8px;
+}
+
+.phone-modal-header h3 {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.top-up-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.top-up-option {
+  border: 2px solid var(--on-background);
+  background-color: var(--surface-container-lowest);
+  padding: 10px;
+  text-align: center;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.top-up-option.active {
+  background-color: var(--tertiary-fixed);
+  box-shadow: 2px 2px 0px var(--on-background);
+}
+
+/* Success top up view */
+.success-checkmark-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.success-circle {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background-color: var(--tertiary-fixed);
+  border: 4px solid var(--on-background);
+  box-shadow: var(--neo-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.success-circle i {
+  font-size: 56px;
+  color: var(--on-background);
+}
+
+.success-title {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1.1;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.success-details-card {
+  width: 100%;
+  border: 3px solid var(--on-background);
+  background-color: var(--surface-container-lowest);
+  box-shadow: var(--neo-shadow-sm);
+  margin-bottom: 16px;
+}
+
+.success-detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  font-size: 12px;
+  border-bottom: 2px solid var(--on-background);
+}
+
+.success-detail-row:last-child {
+  border-bottom: none;
+}
+
+.success-detail-row.headline {
+  background-color: var(--surface-variant);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.success-balance-banner {
+  width: 100%;
+  background-color: var(--inverse-surface);
+  color: var(--inverse-on-surface);
+  border: 3px solid var(--on-background);
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.success-balance-banner span.label {
+  color: var(--surface-variant);
+  font-size: 11px;
+}
+
+.success-balance-banner span.val {
+  color: var(--tertiary-fixed);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+/* Column 3: Admin & Logs Panel */
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 600px) {
+  .admin-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.admin-stat-card {
+  border: 3px solid var(--on-background);
+  box-shadow: var(--neo-shadow-sm);
+  padding: 10px;
+  background-color: var(--surface-container-lowest);
+}
+
+.admin-stat-card .label {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--on-surface-variant);
+  text-transform: uppercase;
+}
+
+.admin-stat-card .val {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 800;
+  margin-top: 2px;
+}
+
+.admin-tabs {
+  display: flex;
+  border-bottom: 3px solid var(--on-background);
+  margin-bottom: 12px;
+}
+
+.admin-tab {
+  padding: 8px 16px;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  border: 3px solid transparent;
+  border-bottom: none;
+  cursor: pointer;
+}
+
+.admin-tab.active {
+  border-color: var(--on-background);
+  background-color: var(--surface-container-lowest);
+  margin-bottom: -3px;
+  position: relative;
+  z-index: 5;
+}
+
+.admin-table-container {
+  max-height: 250px;
+  overflow-y: auto;
+  border: 3px solid var(--on-background);
+  background-color: var(--surface-container-lowest);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 12px;
+}
+
+.admin-table th {
+  background-color: var(--surface-variant);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 8px 12px;
+  border-bottom: 3px solid var(--on-background);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.admin-table td {
+  padding: 8px 12px;
+  border-bottom: 1.5px solid var(--outline-variant);
+  font-family: var(--font-body);
+}
+
+.admin-table tr:hover {
+  background-color: var(--surface-container-low);
+}
+
+/* Terminal Console logs */
+.console-container {
+  background-color: #0c0812;
+  border: 4px solid var(--on-background);
+  box-shadow: var(--neo-shadow);
+  padding: 12px;
+}
+
+.console-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--secondary);
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+}
+
+.console-title {
+  color: var(--success);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.console-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--success);
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+.console-output {
+  height: 180px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--outline-variant);
+  padding-right: 6px;
+}
+
+.console-line {
+  margin-bottom: 4px;
+  white-space: pre-wrap;
+}
+
+.console-line.info {
+  color: #8be9fd;
+}
+
+.console-line.success {
+  color: var(--success);
+}
+
+.console-line.warn {
+  color: var(--tertiary-fixed-dim);
+}
+
+.console-line.error {
+  color: #ff5555;
+}
+
+.console-line.timestamp {
+  color: #6272a4;
+}
+
+/* General Layout helpers */
+.text-right { text-align: right; }
+.bold { font-weight: 700; }
+.mono { font-family: var(--font-mono); }
+.italic { font-style: italic; }
+.d-flex { display: flex; }
+.justify-between { justify-content: space-between; }
+.align-center { align-items: center; }
+.gap-8 { gap: 8px; }
+.w-full { width: 100%; }
+.m-0 { margin: 0 !important; }
+.mt-8 { margin-top: 8px; }
+.mb-12 { margin-bottom: 12px; }
+
+/* Status Labels */
+.status-pill {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  border: 1.5px solid var(--on-background);
+  text-transform: uppercase;
+}
+
+.status-pill.active {
+  background-color: var(--success);
+  color: var(--on-success);
+}
+
+.status-pill.completed {
+  background-color: var(--surface-variant);
+  color: var(--on-surface-variant);
+}
+
+.status-pill.insufficient {
+  background-color: var(--error-container);
+  color: var(--on-error-container);
+}

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Parkir Boss - Top Up Success</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@400;700;800;900&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary": "#765b00",
+                    "on-tertiary-fixed-variant": "#594400",
+                    "on-background": "#1d1b20",
+                    "secondary-container": "#e1d4fd",
+                    "surface-bright": "#fdf7ff",
+                    "on-secondary-fixed": "#1f1635",
+                    "surface": "#fdf7ff",
+                    "background": "#fdf7ff",
+                    "primary-fixed": "#e9ddff",
+                    "surface-variant": "#e6e0e9",
+                    "on-error": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "surface-dim": "#ded8e0",
+                    "surface-container-highest": "#e6e0e9",
+                    "tertiary-fixed-dim": "#e7c365",
+                    "secondary-fixed": "#e9ddff",
+                    "on-tertiary-fixed": "#241a00",
+                    "on-secondary-container": "#645a7d",
+                    "on-tertiary-container": "#503d00",
+                    "on-surface": "#1d1b20",
+                    "inverse-primary": "#cfbcff",
+                    "tertiary-container": "#c9a74d",
+                    "surface-container-low": "#f8f2fa",
+                    "secondary-fixed-dim": "#cdc0e9",
+                    "primary-fixed-dim": "#cfbcff",
+                    "on-primary-container": "#e0d2ff",
+                    "on-primary-fixed-variant": "#4f378a",
+                    "outline": "#7a7582",
+                    "error-container": "#ffdad6",
+                    "surface-container-high": "#ece6ee",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-fixed": "#22005d",
+                    "on-tertiary": "#ffffff",
+                    "primary": "#4f378a",
+                    "error": "#ba1a1a",
+                    "surface-container": "#f2ecf4",
+                    "on-secondary-fixed-variant": "#4b4263",
+                    "inverse-surface": "#322f35",
+                    "tertiary-fixed": "#ffdf93",
+                    "primary-container": "#6750a4",
+                    "secondary": "#63597c",
+                    "surface-tint": "#6750a4",
+                    "outline-variant": "#cbc4d2",
+                    "on-primary": "#ffffff",
+                    "inverse-on-surface": "#f5eff7",
+                    "on-surface-variant": "#494551",
+                    "on-secondary": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "lg": "24px",
+                    "md": "16px",
+                    "2xl": "48px",
+                    "unit": "4px",
+                    "gutter": "16px",
+                    "sm": "8px",
+                    "margin": "20px",
+                    "xl": "32px"
+            },
+            "fontFamily": {
+                    "label-lg": ["Space Grotesk"],
+                    "headline-lg": ["Space Grotesk"],
+                    "body-lg": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "label-sm": ["Space Grotesk"],
+                    "body-md": ["Inter"],
+                    "label-md": ["Space Grotesk"],
+                    "headline-md": ["Space Grotesk"],
+                    "headline-xl": ["Space Grotesk"]
+            },
+            "fontSize": {
+                    "label-lg": ["16px", {"lineHeight": "1.0", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.1", "fontWeight": "800"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "body-sm": ["14px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "headline-xl": ["48px", {"lineHeight": "1.0", "fontWeight": "900"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface antialiased min-h-screen flex flex-col selection:bg-tertiary-fixed selection:text-on-tertiary-fixed">
+<!-- Main Content Canvas (Transactional/Linear View - No Navigation Bars) -->
+<main class="flex-grow flex flex-col justify-center items-center max-w-md w-full mx-auto px-margin py-2xl relative">
+<!-- Background Decorative Element for Brutalist Vibe -->
+<div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: radial-gradient(#1d1b20 2px, transparent 2px); background-size: 24px 24px;"></div>
+<!-- Success Icon -->
+<div class="relative z-10 w-[120px] h-[120px] rounded-full bg-tertiary-fixed border-[4px] border-on-background shadow-[6px_6px_0px_0px_#1d1b20] flex items-center justify-center mb-xl">
+<span class="material-symbols-outlined text-[72px] text-on-background" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<!-- Headline -->
+<h1 class="relative z-10 font-headline-xl text-headline-xl font-black italic uppercase text-on-background text-center mb-xl tracking-tighter leading-none">
+            TOP UP<br/>BERHASIL!
+        </h1>
+<!-- Transaction Details Card -->
+<div class="relative z-10 w-full bg-surface-container-lowest border-[3px] border-on-background shadow-[4px_4px_0px_0px_#1d1b20] mb-lg flex flex-col">
+<div class="flex justify-between items-center p-md border-b-[3px] border-on-background bg-surface-variant">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase">Jumlah Top Up</span>
+<span class="font-headline-md text-headline-md text-on-background font-black">Rp 100.000</span>
+</div>
+<div class="flex justify-between items-center p-md border-b-[3px] border-on-background">
+<span class="font-body-md text-body-md text-on-surface-variant">Metode</span>
+<span class="font-label-md text-label-md text-on-background uppercase">GoPay</span>
+</div>
+<div class="flex justify-between items-center p-md border-b-[3px] border-on-background">
+<span class="font-body-md text-body-md text-on-surface-variant">ID Transaksi</span>
+<span class="font-label-md text-label-md text-on-background uppercase tracking-widest">#TX-88291</span>
+</div>
+<div class="flex justify-between items-center p-md bg-surface">
+<span class="font-body-md text-body-md text-on-surface-variant">Waktu</span>
+<span class="font-label-md text-label-md text-on-background uppercase">12 Okt 2023, 14:30</span>
+</div>
+</div>
+<!-- Main Balance Summary -->
+<div class="relative z-10 w-full bg-inverse-surface text-inverse-on-surface border-[3px] border-on-background shadow-[4px_4px_0px_0px_#1d1b20] p-md mb-2xl flex justify-between items-center">
+<span class="font-label-lg text-label-lg uppercase tracking-wider text-surface-variant">Saldo Baru</span>
+<span class="font-headline-lg text-headline-lg text-tertiary-fixed font-black">Rp 245.000</span>
+</div>
+<!-- CTA Button -->
+<button class="relative z-10 w-full bg-tertiary-fixed text-on-tertiary-fixed border-[4px] border-on-background shadow-[4px_4px_0px_0px_#1d1b20] py-lg px-md font-label-lg text-label-lg font-black uppercase hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none transition-all active:bg-tertiary-container focus:outline-none focus:ring-4 focus:ring-primary-container">
+            KEMBALI KE BERANDA
+        </button>
+</main>
+</body></html>
