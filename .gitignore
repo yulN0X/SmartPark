@@ -54,3 +54,22 @@ graphify-out/cache/
 
 # ─── Backup repo git orphan (lihat catatan migrasi) ───
 _orphan_parkirboss_git_backup.tar.gz
+
+# ─── Bisnis / dokumen non-kode ───
+Bisnis/
+Video_Promosi/
+Brand_Assets/
+Laporan_Akhir_SmartPark.pdf
+penambahan.docx
+~$*
+
+# ─── Gambar arsitektur (besar, non-kode) ───
+arsitektur_sistem*.png
+flowchart_metodologi*.png
+skema_iot_gate.png
+Bagian_Pemodelan.pdf
+INTEGRASI_SISTEM.pdf
+
+# ─── Folder kosong / legacy ───
+SmartPark/
+app/

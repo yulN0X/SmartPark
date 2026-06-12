@@ -49,7 +49,7 @@ const char* WIFI_PASSWORD = "12345678";
 // SmartPark API — IP laptop/Raspberry Pi pada WiFi yang sama (TANPA "http://").
 // Cari IP laptop: macOS `ipconfig getifaddr en0` · Windows `ipconfig` · Linux `hostname -I`.
 // Jalankan backend dengan: uvicorn api.main:app --host 0.0.0.0 --port 8000
-const char* API_HOST = "10.209.121.249";
+const char* API_HOST = "10.49.63.249";
 const int   API_PORT = 8000;
 const char* API_PATH = "/device/process-image";
 
@@ -225,7 +225,7 @@ bool initCamera() {
 
   // HYBRID needs 2 frame buffers (stream + capture/gate share the camera).
   if (psramFound()) {
-    config.frame_size   = FRAMESIZE_UXGA;     // 800x600 — balance stream vs plate detail
+    config.frame_size   = FRAMESIZE_SVGA;     // 800x600 — balance stream vs plate detail
     config.jpeg_quality = 8;                 // 0-63, lower = better quality
     config.fb_count     = 2;
     config.fb_location  = CAMERA_FB_IN_PSRAM;
