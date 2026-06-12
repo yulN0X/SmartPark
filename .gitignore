@@ -49,8 +49,19 @@ ParkirBoss/parkirboss-app/ios/Flutter/Flutter.podspec
 .idea/
 .vscode/
 
-# ─── graphify (simpan report & graph, abaikan cache besar) ───
-graphify-out/cache/
+# ─── AI tools / generated output (config pribadi, bukan source code) ───
+.agents/
+.claude/
+CLAUDE.md
+graphify-out/
+
+# ─── Catatan internal / debug (tidak perlu di repo publik) ───
+sedikit_perbaikan.md
+RENCANA_PERBAIKAN.md
+dev-db.md
+killapi.py
+ParkirBoss/parkirboss-app/stitch_screen*.html
+ParkirBoss/parkirboss-app/stitch_screens/
 
 # ─── Backup repo git orphan (lihat catatan migrasi) ───
 _orphan_parkirboss_git_backup.tar.gz
