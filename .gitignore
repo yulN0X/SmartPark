@@ -14,10 +14,8 @@ ParkirBoss/parkirboss-api/venv/
 # ─── Databases (runtime) ───
 *.db
 
-# ─── ML model weights & archives (large; tersedia di Hugging Face) ───
+# ─── ML archives & training artifacts ───
 *.zip
-*.pt
-*.onnx
 models/best_saved_model/
 runs/
 
