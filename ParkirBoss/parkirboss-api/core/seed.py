@@ -1,10 +1,10 @@
 """
-Seed initial data: parking rates and gate locations.
+Seed initial data: parking rates, gate locations, parking locations, devices.
 Run once at startup to ensure baseline data exists.
 """
 
 from sqlalchemy.orm import Session
-from models.domain import ParkingRate, GateLocation, GateType, ParkingLocation
+from models.domain import ParkingRate, GateLocation, GateType, ParkingLocation, Device, DeviceStatus
 
 
 def seed_data(db: Session):
@@ -84,4 +84,27 @@ def seed_data(db: Session):
             db.add(ParkingLocation(**loc, is_active=True))
             print(f"[SEED] ✅ Parking location added: {loc['name']} ({loc['id']})")
 
+    # ── IoT Devices (per-device secrets) ─────────────────────────────
+    devices = [
+        {
+            "id": "DEV-GATE-A-IN",
+            "device_name": "ESP32-CAM Gate A Entry",
+            "device_secret": "smartpark-entry-a-secret-2026",
+            "gate_id": "GATE-A-IN",
+        },
+        {
+            "id": "DEV-GATE-A-OUT",
+            "device_name": "ESP32-CAM Gate A Exit",
+            "device_secret": "smartpark-exit-a-secret-2026",
+            "gate_id": "GATE-A-OUT",
+        },
+    ]
+
+    for dev in devices:
+        existing = db.query(Device).filter(Device.id == dev["id"]).first()
+        if not existing:
+            db.add(Device(**dev, status=DeviceStatus.ACTIVE))
+            print(f"[SEED] ✅ Device added: {dev['device_name']} ({dev['id']})")
+
     db.commit()
+

@@ -1,5 +1,8 @@
 import uuid
-from sqlalchemy import Column, String, Float, Boolean, ForeignKey, Integer, DateTime, Enum
+from sqlalchemy import (
+    Column, String, Float, Boolean, ForeignKey, Integer, DateTime,
+    Enum, Index, UniqueConstraint, event,
+)
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from core.database import Base
@@ -22,6 +25,10 @@ class TransactionType(str, enum.Enum):
 class GateType(str, enum.Enum):
     ENTRY = "ENTRY"
     EXIT = "EXIT"
+
+class DeviceStatus(str, enum.Enum):
+    ACTIVE = "ACTIVE"
+    DISABLED = "DISABLED"
 
 class User(Base):
     __tablename__ = "users"
@@ -112,3 +119,59 @@ class ParkingLocation(Base):
     latitude = Column(Float)
     longitude = Column(Float)
     is_active = Column(Boolean, default=True)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# New models — Sprint 1
+# ═══════════════════════════════════════════════════════════════════════
+
+class Device(Base):
+    """Registered IoT device (ESP32-CAM, etc.) with a per-device secret."""
+    __tablename__ = "devices"
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    device_name = Column(String, nullable=False)
+    device_secret = Column(String, nullable=False, index=True)
+    gate_id = Column(String, nullable=True)
+    status = Column(Enum(DeviceStatus), default=DeviceStatus.ACTIVE)
+    last_seen = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class GateEvent(Base):
+    """Audit log for every gate trigger — debugging, security, analytics."""
+    __tablename__ = "gate_events"
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+    plate = Column(String, nullable=True)
+    confidence = Column(Float, nullable=True)
+    gate_id = Column(String, nullable=True)
+    gate_type = Column(String, nullable=True)   # "entry" / "exit"
+    action = Column(String, nullable=False)      # OPEN_GATE, REJECTED, REVIEW, …
+    reason = Column(String, nullable=True)
+    device_id = Column(String, nullable=True)
+    user_id = Column(String, nullable=True)
+    session_id = Column(String, nullable=True)
+    raw_ocr = Column(String, nullable=True)
+
+
+class UserLocation(Base):
+    """Latest GPS coordinates sent by the mobile app (upsert per user)."""
+    __tablename__ = "user_locations"
+    user_id = Column(String, ForeignKey("users.id"), primary_key=True)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    accuracy = Column(Float, nullable=True)
+    updated_at = Column(DateTime, default=datetime.utcnow)
+
+
+# ── SQLite-compatible "partial unique index" workaround ──────────────
+# PostgreSQL supports: CREATE UNIQUE INDEX … WHERE status='ACTIVE'
+# SQLite does not, so we create a normal index and rely on application-
+# level checks + nested transactions for race-condition safety.
+# When migrating to PostgreSQL, replace with a true partial unique index.
+Index(
+    "ix_active_plate_session",
+    ParkingSession.plate_number,
+    ParkingSession.status,
+)
+

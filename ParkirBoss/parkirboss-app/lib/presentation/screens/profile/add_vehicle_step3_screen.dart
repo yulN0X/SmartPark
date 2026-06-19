@@ -48,11 +48,11 @@ class _AddVehicleStep3ScreenState extends State<AddVehicleStep3Screen> {
   Future<void> _save() async {
     if (_vehiclePhoto == null || _isSaving) return;
     setState(() => _isSaving = true);
-    final success = await _vehicleService.addVehicle(_plate);
+    final result = await _vehicleService.addVehicle(_plate);
     if (!mounted) return;
     setState(() => _isSaving = false);
 
-    if (success) {
+    if (result.success) {
       await showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -84,7 +84,7 @@ class _AddVehicleStep3ScreenState extends State<AddVehicleStep3Screen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gagal menyimpan kendaraan, coba lagi')),
+        SnackBar(content: Text(result.message ?? 'Gagal menyimpan kendaraan, coba lagi')),
       );
     }
   }

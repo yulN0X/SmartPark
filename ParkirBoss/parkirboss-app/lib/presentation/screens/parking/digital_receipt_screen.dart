@@ -29,7 +29,7 @@ class DigitalReceiptScreen extends StatelessWidget {
           padding: const EdgeInsets.only(left: AppSpacing.margin, top: AppSpacing.sm, bottom: AppSpacing.sm),
           child: Container(decoration: BoxDecoration(color: AppColors.surfaceVariant, border: Border.all(color: AppColors.onBackground, width: AppSpacing.borderMedium), shape: BoxShape.circle), child: const Icon(Icons.person, color: AppColors.onSurfaceVariant)),
         ),
-        title: Text('PARKIR BOSS', style: AppTypography.headlineMedium.copyWith(fontWeight: FontWeight.w900, fontStyle: FontStyle.italic, color: AppColors.tertiary, letterSpacing: -1.0)),
+        title: Image.asset('assets/images/parkirboss_logo_horizontal.png', height: 28, fit: BoxFit.contain),
         centerTitle: true,
         bottom: PreferredSize(preferredSize: const Size.fromHeight(AppSpacing.borderMedium), child: Container(color: AppColors.onBackground, height: AppSpacing.borderMedium)),
       ),
@@ -54,7 +54,7 @@ class DigitalReceiptScreen extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('PARKIR BOSS', style: AppTypography.labelLarge),
+                  Image.asset('assets/images/parkirboss_logo_horizontal.png', height: 16, fit: BoxFit.contain),
                   Text('Digital Receipt', style: AppTypography.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
                 ]),
                 Container(

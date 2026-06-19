@@ -4,33 +4,6 @@
 
   Hardware: ESP32-CAM AI-Thinker  •  Sensor kamera: OV3660 (atau OV2640)
   Role    : Kamera + controller untuk gate MASUK
-
-  Komponen:
-  • OV3660/OV2640 Camera (built-in) → live stream + capture foto kendaraan
-  • Flash LED (GPIO 4)              → pencahayaan plat saat capture
-  • HC-SR04 Ultrasonic              → deteksi kendaraan mendekat
-  • IR Obstacle Sensor              → deteksi kendaraan sudah lewat → auto-close
-  • Servo SG90                      → palang gate barrier
-  • LED Onboard (GPIO 33)           → indikator status
-
-  Mode HYBRID (3 jalur sekaligus):
-  1. LIVE STREAM  — http://<ip>:81/stream (MJPEG) tampil di dashboard,
-                    http://<ip>/capture (1 JPEG) ditarik backend untuk ANPR live.
-  2. AUTO-REGISTER— saat boot kirim POST /device/register supaya dashboard
-                    menemukan kamera ini otomatis.
-  3. GATE TRIGGER — HC-SR04 deteksi kendaraan → capture → POST /device/process-image
-                    → jika OPEN_GATE: servo buka → IR sensor → servo tutup.
-
-  Libraries:
-  - esp_camera.h / esp_http_server.h  (ESP32 board package)
-  - WiFi.h / WiFiClient.h             (built-in)
-  - ESP32Servo                        (Kevin Harrington)
-  - ArduinoJson                       (Benoit Blanchon, v7)
-
-  Board Settings di Arduino IDE:
-  - Board: AI Thinker ESP32-CAM
-  - Partition Scheme: Huge APP (3MB No OTA / 1MB SPIFFS)
-  - PSRAM: Enabled
 */
 
 #include "esp_camera.h"
@@ -46,10 +19,8 @@
 const char* WIFI_SSID     = "xzzx";
 const char* WIFI_PASSWORD = "12345678";
 
-// SmartPark API — IP laptop/Raspberry Pi pada WiFi yang sama (TANPA "http://").
-// Cari IP laptop: macOS `ipconfig getifaddr en0` · Windows `ipconfig` · Linux `hostname -I`.
-// Jalankan backend dengan: uvicorn api.main:app --host 0.0.0.0 --port 8000
-const char* API_HOST = "10.49.63.249";
+// SmartPark API
+const char* API_HOST = "10.228.58.14";
 const int   API_PORT = 8000;
 const char* API_PATH = "/device/process-image";
 
@@ -64,20 +35,19 @@ const char* API_NEAREST_ONLY = "true";
 const bool  USE_FLASH_LED     = false;
 
 // Streaming / capture HTTP servers on the ESP32-CAM
-const int   CONTROL_PORT = 80;   // /  /capture  /status
-const int   STREAM_PORT  = 81;   // /stream (MJPEG)
+const int   CONTROL_PORT = 80;   
+const int   STREAM_PORT  = 81;   
 const bool  ENABLE_STREAM_SERVER = true;
-const unsigned long REGISTER_INTERVAL_MS = 30000;  // re-announce to backend
+const unsigned long REGISTER_INTERVAL_MS = 30000;  
+
 
 // ─────────────────── PIN DEFINITIONS ───────────────────
-// ESP32-CAM AI-Thinker — GPIO terbatas, hati-hati pin assignment!
-
-const int PIN_FLASH_LED     = 4;   // Built-in flash LED
-const int PIN_HC_TRIG       = 14;  // HC-SR04 Trigger
-const int PIN_HC_ECHO       = 15;  // HC-SR04 Echo
-const int PIN_SERVO         = 13;  // Servo SG90 PWM
-const int PIN_IR_OBSTACLE   = 2;   // IR Obstacle sensor (auto-close)
-const int PIN_LED_ONBOARD   = 33;  // Onboard red LED (active LOW)
+const int PIN_FLASH_LED     = 4;   
+const int PIN_HC_TRIG       = 14;  
+const int PIN_HC_ECHO       = 15;  
+const int PIN_SERVO         = 13;  
+const int PIN_IR_OBSTACLE   = 2;   
+const int PIN_LED_ONBOARD   = 33;  
 
 // ─────────────────── CAMERA PIN CONFIG (AI-Thinker) ───────────────────
 #define PWDN_GPIO_NUM     32
@@ -98,13 +68,13 @@ const int PIN_LED_ONBOARD   = 33;  // Onboard red LED (active LOW)
 #define PCLK_GPIO_NUM     22
 
 // ─────────────────── THRESHOLDS ───────────────────
-const float  TRIGGER_DISTANCE_CM  = 30.0;   // Trigger saat objek < 30cm
-const unsigned long COOLDOWN_MS   = 10000;  // Min waktu antar trigger
-const int    GATE_OPEN_DEGREES    = 90;     // Sudut servo saat buka
-const int    GATE_CLOSED_DEGREES  = 0;      // Sudut servo saat tutup
-const unsigned long GATE_TIMEOUT_MS = 30000; // Fallback timeout jika IR sensor gagal
-const unsigned long IR_DEBOUNCE_MS  = 500;   // Debounce IR sensor
-const unsigned long API_TIMEOUT_MS   = 30000; // Timeout upload + response API
+const float  TRIGGER_DISTANCE_CM  = 30.0;   
+const unsigned long COOLDOWN_MS   = 10000;  
+const int    GATE_OPEN_DEGREES    = 0;     
+const int    GATE_CLOSED_DEGREES  = 90;      
+const unsigned long GATE_TIMEOUT_MS = 30000; 
+const unsigned long IR_DEBOUNCE_MS  = 500;   
+const unsigned long API_TIMEOUT_MS   = 30000; 
 
 // ─────────────────── GLOBAL STATE ───────────────────
 Servo gateServo;
@@ -119,6 +89,31 @@ unsigned long lastRegisterAt = 0;
 httpd_handle_t stream_httpd  = NULL;
 httpd_handle_t control_httpd = NULL;
 
+// Prototipe Fungsi agar dideklarasikan di awal scope kompiler
+bool initCamera();
+void connectWiFi();
+void ensureWiFi();
+void checkApiHealth();
+void startCameraServers();
+void registerWithBackend();
+void processVehicle(const char* sensorName);
+void handleSerialCommands();
+float readDistanceCm();
+camera_fb_t* captureWithFlash();
+String uploadAndProcess(camera_fb_t* fb, const char* sensorName);
+String readHttpResponse(WiFiClient& client);
+int parseHttpStatus(const String& response);
+String parseResponse(const String& body);
+void handleAction(const String& action);
+void openGate();
+void closeGate();
+void handleGateAutoClose();
+void ledOn();
+void ledOff();
+void blinkOK();
+void blinkError(int count);
+void blinkStatus(int count, int delayMs);
+
 // ═══════════════════ SETUP ═══════════════════
 
 void setup() {
@@ -128,14 +123,14 @@ void setup() {
   Serial.println("  ESP32-CAM AI-Thinker (HYBRID stream)");
   Serial.println("========================================\n");
 
-  pinMode(PIN_FLASH_LED, OUTPUT);
   pinMode(PIN_HC_TRIG, OUTPUT);
   pinMode(PIN_HC_ECHO, INPUT);
   pinMode(PIN_IR_OBSTACLE, INPUT_PULLUP);
   pinMode(PIN_LED_ONBOARD, OUTPUT);
+  digitalWrite(PIN_LED_ONBOARD, HIGH);  
 
-  digitalWrite(PIN_FLASH_LED, LOW);
-  digitalWrite(PIN_LED_ONBOARD, HIGH);  // OFF (active LOW)
+  pinMode(PIN_FLASH_LED, OUTPUT);
+  digitalWrite(PIN_FLASH_LED, LOW);          
 
   if (!initCamera()) {
     Serial.println("FATAL: Camera init failed!");
@@ -146,6 +141,14 @@ void setup() {
   gateServo.attach(PIN_SERVO);
   gateServo.write(GATE_CLOSED_DEGREES);
   Serial.println("Gate servo initialized (closed)");
+
+  // Self-test servo saat boot: buka lalu tutup sekali — verifikasi tanpa Serial Monitor.
+  Serial.println(">>> Servo self-test: OPEN -> CLOSE ...");
+  delay(600);
+  openGate();
+  delay(1000);
+  closeGate();
+  Serial.println(">>> Servo self-test selesai");
 
   connectWiFi();
   checkApiHealth();
@@ -186,7 +189,6 @@ void loop() {
     processVehicle("ultrasonic");
   }
 
-  // Periodically re-announce to the backend (covers backend restarts / DHCP changes).
   if (millis() - lastRegisterAt >= REGISTER_INTERVAL_MS) {
     registerWithBackend();
   }
@@ -201,7 +203,7 @@ bool initCamera() {
   Serial.println("Initializing camera...");
 
   camera_config_t config;
-  config.ledc_channel = LEDC_CHANNEL_0;
+  config.ledc_channel = LEDC_CHANNEL_0; 
   config.ledc_timer   = LEDC_TIMER_0;
   config.pin_d0       = Y2_GPIO_NUM;
   config.pin_d1       = Y3_GPIO_NUM;
@@ -221,21 +223,20 @@ bool initCamera() {
   config.pin_reset    = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;
   config.pixel_format = PIXFORMAT_JPEG;
-  config.grab_mode    = CAMERA_GRAB_LATEST;   // newest frame for stream + capture
+  config.grab_mode    = CAMERA_GRAB_LATEST;
 
-  // HYBRID needs 2 frame buffers (stream + capture/gate share the camera).
   if (psramFound()) {
-    config.frame_size   = FRAMESIZE_SVGA;     // 800x600 — balance stream vs plate detail
-    config.jpeg_quality = 8;                 // 0-63, lower = better quality
+    config.frame_size   = FRAMESIZE_VGA;
+    config.jpeg_quality = 12;
     config.fb_count     = 2;
     config.fb_location  = CAMERA_FB_IN_PSRAM;
-    Serial.println("PSRAM found — SVGA 800x600, fb_count=2 (hybrid)");
+    Serial.println("PSRAM found — VGA 640x480, fb_count=2");
   } else {
-    config.frame_size   = FRAMESIZE_VGA;      // 640x480
+    config.frame_size   = FRAMESIZE_VGA;
     config.jpeg_quality = 15;
     config.fb_count     = 1;
     config.fb_location  = CAMERA_FB_IN_DRAM;
-    Serial.println("No PSRAM — VGA 640x480, fb_count=1 (stream may stutter)");
+    Serial.println("No PSRAM — VGA 640x480, fb_count=1");
   }
 
   esp_err_t err = esp_camera_init(&config);
@@ -244,26 +245,24 @@ bool initCamera() {
     return false;
   }
 
-  // Tune sensor for license-plate capture, with OV3660-specific fixes.
   sensor_t* s = esp_camera_sensor_get();
   if (s) {
     if (s->id.PID == OV3660_PID) {
       Serial.println("Sensor: OV3660 detected");
-      s->set_vflip(s, 1);          // OV3660 is mounted upside-down on most boards
+      s->set_vflip(s, 1);
       s->set_brightness(s, 1);
       s->set_saturation(s, -2);
     } else {
-      Serial.printf("Sensor PID: 0x%x (OV2640 or other)\n", s->id.PID);
-      s->set_vflip(s, 1);
+      Serial.printf("Sensor PID: 0x%x\n", s->id.PID);
+      s->set_vflip(s, 0);
     }
-    s->set_framesize(s, psramFound() ? FRAMESIZE_SVGA : FRAMESIZE_VGA);
+    s->set_framesize(s, FRAMESIZE_VGA);
     s->set_contrast(s, 1);
     s->set_sharpness(s, 1);
     s->set_whitebal(s, 1);
     s->set_awb_gain(s, 1);
     s->set_exposure_ctrl(s, 1);
     s->set_gain_ctrl(s, 1);
-    s->set_vflip(s, 1);
   }
 
   Serial.println("Camera OK — ready for stream + capture");
@@ -274,18 +273,17 @@ camera_fb_t* captureWithFlash() {
   if (USE_FLASH_LED) {
     Serial.println("Flash LED ON — capturing image...");
     digitalWrite(PIN_FLASH_LED, HIGH);
-    delay(180);
+    delay(180); 
   } else {
     Serial.println("Capturing image...");
     delay(80);
   }
 
-  // Discard first frame (may have stale exposure), then grab the real one.
   camera_fb_t* fb = esp_camera_fb_get();
   if (fb) esp_camera_fb_return(fb);
   fb = esp_camera_fb_get();
 
-  digitalWrite(PIN_FLASH_LED, LOW);
+  digitalWrite(PIN_FLASH_LED, LOW); 
   if (USE_FLASH_LED) Serial.println("Flash LED OFF");
   return fb;
 }
@@ -315,8 +313,8 @@ static esp_err_t stream_handler(httpd_req_t* req) {
     }
     esp_camera_fb_return(fb);
 
-    if (res != ESP_OK) break;  // client disconnected
-    delay(10);                 // ~20-25 fps cap, keeps AI-Thinker responsive
+    if (res != ESP_OK) break;
+    delay(10);
   }
   return res;
 }
@@ -329,7 +327,6 @@ static esp_err_t capture_handler(httpd_req_t* req) {
   }
   httpd_resp_set_type(req, "image/jpeg");
   httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
-  httpd_resp_set_hdr(req, "Content-Disposition", "inline; filename=capture.jpg");
   esp_err_t res = httpd_resp_send(req, (const char*)fb->buf, fb->len);
   esp_camera_fb_return(fb);
   return res;
@@ -359,7 +356,6 @@ static esp_err_t index_handler(httpd_req_t* req) {
 }
 
 void startCameraServers() {
-  // Control server (port 80): index, capture, status
   httpd_config_t config = HTTPD_DEFAULT_CONFIG();
   config.server_port = CONTROL_PORT;
   config.ctrl_port   = 32768;
@@ -377,7 +373,6 @@ void startCameraServers() {
     Serial.println("WARNING: control server failed to start");
   }
 
-  // Stream server (port 81): MJPEG only, separate httpd so streaming never blocks /capture
   config.server_port = STREAM_PORT;
   config.ctrl_port   = 32769;
   httpd_uri_t stream_uri = { .uri = "/stream", .method = HTTP_GET, .handler = stream_handler, .user_ctx = NULL };
@@ -444,8 +439,6 @@ void processVehicle(const char* sensorName) {
     return;
   }
 
-  Serial.printf("Image captured: %dx%d JPEG (%d bytes)\n", fb->width, fb->height, fb->len);
-
   String action = uploadAndProcess(fb, sensorName);
   esp_camera_fb_return(fb);
 
@@ -459,30 +452,15 @@ void handleSerialCommands() {
     if (command == '\n' || command == '\r' || command == ' ') continue;
 
     if (command == 't' || command == 'T') {
-      Serial.println("\n[Serial] Manual capture + upload test");
       if (!gateIsOpen) processVehicle("serial-test");
-      else Serial.println("Gate is still open; close it before manual capture.");
     } else if (command == 'o' || command == 'O') {
-      Serial.println("\n[Serial] Open gate test");
       if (!gateIsOpen) openGate();
     } else if (command == 'c' || command == 'C') {
-      Serial.println("\n[Serial] Close gate test");
       if (gateIsOpen) closeGate();
-      else gateServo.write(GATE_CLOSED_DEGREES);
     } else if (command == 'd' || command == 'D') {
-      float distanceCm = readDistanceCm();
-      Serial.printf("\n[Serial] Distance: %.1f cm\n", distanceCm);
+      Serial.printf("\nDistance: %.1f cm\n", readDistanceCm());
     } else if (command == 'r' || command == 'R') {
-      Serial.println("\n[Serial] Re-register with backend");
       registerWithBackend();
-    } else if (command == 'h' || command == 'H' || command == '?') {
-      Serial.println("\nSerial commands:");
-      Serial.println("  t = capture + upload test");
-      Serial.println("  o = open gate servo");
-      Serial.println("  c = close gate servo");
-      Serial.println("  d = read ultrasonic distance");
-      Serial.println("  r = re-register camera to backend");
-      Serial.println("  h/? = help");
     }
   }
 }
@@ -515,17 +493,13 @@ void connectWiFi() {
     Serial.print(".");
     attempts++;
   }
-
   if (WiFi.status() == WL_CONNECTED) {
     Serial.printf("\nConnected! IP: %s\n", WiFi.localIP().toString().c_str());
-  } else {
-    Serial.println("\nWiFi FAILED — will retry");
   }
 }
 
 void ensureWiFi() {
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("WiFi lost — reconnecting...");
     connectWiFi();
   }
 }
@@ -534,25 +508,13 @@ void checkApiHealth() {
   ensureWiFi();
   if (WiFi.status() != WL_CONNECTED) return;
 
-  Serial.printf("API target: http://%s:%d/health\n", API_HOST, API_PORT);
-
   WiFiClient client;
   if (client.connect(API_HOST, API_PORT)) {
     client.println("GET /health HTTP/1.1");
     client.printf("Host: %s:%d\r\n", API_HOST, API_PORT);
     client.println("Connection: close");
     client.println();
-
-    unsigned long timeout = millis();
-    while (client.available() == 0 && millis() - timeout < 5000) delay(10);
-    if (client.available()) {
-      String line = client.readStringUntil('\n');
-      Serial.printf("API check: %s\n", line.c_str());
-    }
     client.stop();
-    Serial.println("API connection OK");
-  } else {
-    Serial.println("WARNING: Cannot reach API");
   }
 }
 
@@ -564,13 +526,7 @@ String uploadAndProcess(camera_fb_t* fb, const char* sensorName) {
 
   WiFiClient client;
   client.setTimeout(API_TIMEOUT_MS);
-  if (!client.connect(API_HOST, API_PORT)) {
-    Serial.println("Connection to API failed");
-    return "CONNECTION_ERROR";
-  }
-
-  Serial.printf("Uploading to %s:%d%s ...\n", API_HOST, API_PORT, API_PATH);
-  unsigned long startMs = millis();
+  if (!client.connect(API_HOST, API_PORT)) return "CONNECTION_ERROR";
 
   String boundary = "----SmartParkBoundary";
   String head = "--" + boundary + "\r\n"
@@ -581,14 +537,6 @@ String uploadAndProcess(camera_fb_t* fb, const char* sensorName) {
               + "Content-Disposition: form-data; name=\"device_id\"\r\n\r\n" + String(DEVICE_ID)
               + "\r\n--" + boundary + "\r\n"
               + "Content-Disposition: form-data; name=\"gate_id\"\r\n\r\n" + String(GATE_ID)
-              + "\r\n--" + boundary + "\r\n"
-              + "Content-Disposition: form-data; name=\"gate_type\"\r\n\r\n" + String(GATE_TYPE)
-              + "\r\n--" + boundary + "\r\n"
-              + "Content-Disposition: form-data; name=\"sensor\"\r\n\r\n" + String(sensorName)
-              + "\r\n--" + boundary + "\r\n"
-              + "Content-Disposition: form-data; name=\"confidence\"\r\n\r\n" + String(API_CONFIDENCE)
-              + "\r\n--" + boundary + "\r\n"
-              + "Content-Disposition: form-data; name=\"nearest_only\"\r\n\r\n" + String(API_NEAREST_ONLY)
               + "\r\n--" + boundary + "--\r\n";
 
   uint32_t totalLen = head.length() + fb->len + tail.length();
@@ -601,39 +549,22 @@ String uploadAndProcess(camera_fb_t* fb, const char* sensorName) {
   client.println();
 
   client.print(head);
-
   const size_t CHUNK = 1024;
   for (size_t i = 0; i < fb->len; i += CHUNK) {
     size_t len = min(CHUNK, fb->len - i);
     client.write(fb->buf + i, len);
     delay(0);
   }
-
   client.print(tail);
 
   String response = readHttpResponse(client);
   client.stop();
 
-  Serial.printf("Response received in %lums\n", millis() - startMs);
-
-  if (response.length() == 0) {
-    Serial.println("API response timeout/empty");
-    return "TIMEOUT";
-  }
-
   int statusCode = parseHttpStatus(response);
-  Serial.printf("HTTP status: %d\n", statusCode);
-  if (statusCode < 200 || statusCode >= 300) {
-    Serial.println("API returned non-2xx response:");
-    Serial.println(response.substring(0, 700));
-    return "HTTP_ERROR";
-  }
+  if (statusCode < 200 || statusCode >= 300) return "HTTP_ERROR";
 
   int bodyStart = response.indexOf("\r\n\r\n");
-  if (bodyStart < 0) {
-    Serial.println("Invalid HTTP response; body not found");
-    return "HTTP_PARSE_ERROR";
-  }
+  if (bodyStart < 0) return "HTTP_PARSE_ERROR";
 
   return parseResponse(response.substring(bodyStart + 4));
 }
@@ -662,104 +593,73 @@ int parseHttpStatus(const String& response) {
 String parseResponse(const String& body) {
   JsonDocument doc;
   DeserializationError err = deserializeJson(doc, body);
-  if (err) {
-    Serial.printf("JSON parse error: %s\n", err.c_str());
-    Serial.println(body.substring(0, 500));
-    return "PARSE_ERROR";
-  }
-
-  String action = doc["command"]["action"] | "UNKNOWN";
-  String reason = doc["command"]["reason"] | "";
-
-  JsonArray results = doc["pipeline"]["results"].as<JsonArray>();
-  if (results.size() > 0) {
-    String plate = results[0]["plate_text"] | "";
-    String normalized = results[0]["plate"]["normalized_plate"] | plate;
-    String prefix = results[0]["plate"]["prefix_letters"] | "";
-    String number = results[0]["plate"]["middle_numbers"] | "";
-    String suffix = results[0]["plate"]["suffix_letters"] | "";
-    float conf = results[0]["plate_confidence"] | 0.0;
-    String decision = results[0]["access"]["decision"] | "";
-
-    Serial.printf("Action     : %s\n", action.c_str());
-    Serial.printf("Plate      : %s\n", normalized.c_str());
-    Serial.printf("Components : %s / %s / %s\n", prefix.c_str(), number.c_str(), suffix.c_str());
-    Serial.printf("Confidence : %.1f%%\n", conf * 100.0);
-    Serial.printf("Decision   : %s\n", decision.c_str());
-  } else {
-    Serial.printf("Action: %s | Reason: %s\n", action.c_str(), reason.c_str());
-  }
-
-  return action;
+  if (err) return "PARSE_ERROR";
+  return doc["command"]["action"] | "UNKNOWN";
 }
 
-// ═══════════════════ ACTION HANDLER ═══════════════════
-
 void handleAction(const String& action) {
-  if (action == "OPEN_GATE") {
-    openGate();
-  } else if (action == "MANUAL_REQUIRED") {
-    Serial.println("=== MANUAL REQUIRED ===");
-    blinkStatus(3, 200);
-  } else {
-    Serial.printf("=== DENIED/ERROR: %s ===\n", action.c_str());
-    blinkStatus(5, 100);
-  }
+  if (action == "OPEN_GATE") openGate();
+  else if (action == "MANUAL_REQUIRED") blinkStatus(3, 200);
+  else blinkStatus(5, 100);
 }
 
 // ═══════════════════ GATE CONTROL ═══════════════════
 
 void openGate() {
-  Serial.println("=== GATE OPENING ===");
-  for (int angle = GATE_CLOSED_DEGREES; angle <= GATE_OPEN_DEGREES; angle += 2) {
+  Serial.printf("Gate OPENING: %d -> %d derajat\n", GATE_CLOSED_DEGREES, GATE_OPEN_DEGREES);
+  // Sweep CLOSED -> OPEN. Step adaptif: negatif (sudut menurun = searah jarum jam)
+  // kalau OPEN < CLOSED, positif kalau OPEN > CLOSED.
+  int step = (GATE_OPEN_DEGREES >= GATE_CLOSED_DEGREES) ? 2 : -2;
+  for (int angle = GATE_CLOSED_DEGREES;
+       step > 0 ? angle <= GATE_OPEN_DEGREES : angle >= GATE_OPEN_DEGREES;
+       angle += step) {
     gateServo.write(angle);
     delay(15);
   }
+  gateServo.write(GATE_OPEN_DEGREES);   // pastikan mendarat tepat di sudut buka
+  Serial.println("Gate OPEN");
   gateIsOpen = true;
   gateOpenedAt = millis();
   vehiclePassingIR = false;
   irFirstDetectAt = 0;
-  Serial.println("Gate open — waiting for vehicle to pass (IR sensor)...");
 }
 
 void closeGate() {
-  Serial.println("=== GATE CLOSING ===");
-  for (int angle = GATE_OPEN_DEGREES; angle >= GATE_CLOSED_DEGREES; angle -= 2) {
+  Serial.printf("Gate CLOSING: %d -> %d derajat\n", GATE_OPEN_DEGREES, GATE_CLOSED_DEGREES);
+  int step = (GATE_CLOSED_DEGREES >= GATE_OPEN_DEGREES) ? 2 : -2;
+  for (int angle = GATE_OPEN_DEGREES;
+       step > 0 ? angle <= GATE_CLOSED_DEGREES : angle >= GATE_CLOSED_DEGREES;
+       angle += step) {
     gateServo.write(angle);
     delay(15);
   }
+  gateServo.write(GATE_CLOSED_DEGREES); // pastikan mendarat tepat di sudut tutup
+  Serial.println("Gate CLOSED");
   gateIsOpen = false;
   vehiclePassingIR = false;
-  Serial.println("Gate closed. Waiting for next vehicle...\n");
 }
 
 void handleGateAutoClose() {
   bool irDetected = digitalRead(PIN_IR_OBSTACLE) == LOW;
-
   if (irDetected && !vehiclePassingIR) {
     vehiclePassingIR = true;
     irFirstDetectAt = millis();
-    Serial.println("IR: Vehicle entering gate...");
   }
-
   if (vehiclePassingIR && !irDetected) {
     if (millis() - irFirstDetectAt > IR_DEBOUNCE_MS) {
-      Serial.println("IR: Vehicle passed through gate!");
       delay(500);
       closeGate();
       return;
     }
   }
-
   if (millis() - gateOpenedAt >= GATE_TIMEOUT_MS) {
-    Serial.println("TIMEOUT: Gate open too long — closing (IR fallback)");
     closeGate();
   }
 }
 
 // ═══════════════════ LED HELPERS ═══════════════════
 
-void ledOn()  { digitalWrite(PIN_LED_ONBOARD, LOW); }   // Active LOW
+void ledOn()  { digitalWrite(PIN_LED_ONBOARD, LOW); }
 void ledOff() { digitalWrite(PIN_LED_ONBOARD, HIGH); }
 
 void blinkOK() {

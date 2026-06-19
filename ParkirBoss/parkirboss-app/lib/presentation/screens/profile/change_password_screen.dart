@@ -90,14 +90,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         elevation: 0,
-        title: Text(
-          'PARKIR BOSS',
-          style: AppTypography.headlineMedium.copyWith(
-            fontWeight: FontWeight.w900,
-            fontStyle: FontStyle.italic,
-            color: AppColors.tertiary,
-            letterSpacing: -1,
-          ),
+        title: Image.asset(
+          'assets/images/parkirboss_logo_horizontal.png',
+          height: 28,
+          fit: BoxFit.contain,
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.tertiary),

@@ -32,9 +32,13 @@ class ParkingService {
   }
 
   /// Nearby parking venues with live availability, sorted by distance.
-  Future<List<Map<String, dynamic>>> getLocations() async {
+  Future<List<Map<String, dynamic>>> getLocations({double? lat, double? lon}) async {
     try {
-      final response = await _apiClient.get('/parking/locations');
+      String path = '/parking/locations';
+      if (lat != null && lon != null) {
+        path += '?lat=$lat&lon=$lon';
+      }
+      final response = await _apiClient.get(path);
       if (response.statusCode == 200) {
         final List data = jsonDecode(response.body);
         return data.cast<Map<String, dynamic>>();

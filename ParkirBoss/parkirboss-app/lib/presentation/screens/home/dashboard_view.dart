@@ -6,6 +6,7 @@ import 'package:parkirboss/core/constants/app_typography.dart';
 import 'package:parkirboss/core/services/wallet_service.dart';
 import 'package:parkirboss/core/services/parking_service.dart';
 import 'package:parkirboss/presentation/common/buttons/brutalist_button.dart';
+import 'package:geolocator/geolocator.dart';
 
 class DashboardView extends StatefulWidget {
   const DashboardView({super.key});
@@ -43,7 +44,22 @@ class _DashboardViewState extends State<DashboardView> {
     try {
       final balance = await _walletService.getBalance();
       final session = await _parkingService.getActiveSession();
-      final locations = await _parkingService.getLocations();
+      
+      double? lat;
+      double? lon;
+      try {
+        final permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+          final position = await Geolocator.getLastKnownPosition() ?? 
+              await Geolocator.getCurrentPosition(timeLimit: const Duration(seconds: 4));
+          lat = position.latitude;
+          lon = position.longitude;
+        }
+      } catch (e) {
+        print('[Dashboard] Geolocator error: $e');
+      }
+
+      final locations = await _parkingService.getLocations(lat: lat, lon: lon);
       if (mounted) {
         setState(() {
           _balance = balance;

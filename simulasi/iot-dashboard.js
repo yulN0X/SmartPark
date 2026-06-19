@@ -259,8 +259,8 @@ let esp32ScanInterval = null;
 let esp32Cameras = {};                 // gate_id -> camera info from /device/cameras
 const ESP32_SCAN_INTERVAL_MS = 1800;
 
-// Per-plate dedup so continuous auto-scan does not re-run billing/session logic
-// for the same vehicle. Shared by the ESP32 scan + local webcam auto-scan.
+// Legacy browser-only demo state. Real gate authorization, sessions, and wallet
+// changes are handled exclusively by the ParkirBoss API.
 let lastProcessedPlate = '';
 let lastProcessedAt = 0;
 const PLATE_DEDUP_MS = 8000;
@@ -462,8 +462,19 @@ async function performAutoScan() {
       addLog(`[AUTOSCAN] Plat terdeteksi: "${plate}" (Confidence: ${confidence}%)`, "success");
       document.getElementById('plate-ocr-result').textContent = plate;
 
-      // Proceed to Pipeline Process (deduped so continuous scan won't double-bill)
-      maybeProcessGate(plate, gateId);
+      // Send the frame through the device bridge. The event poller below renders
+      // the authoritative ParkirBoss response; do not debit/mock a local DB.
+      const gateType = gateId.includes('OUT') ? 'exit' : 'entry';
+      const deviceForm = new FormData();
+      deviceForm.append('file', blob, 'autoscan.jpg');
+      deviceForm.append('device_id', 'dashboard-webcam');
+      deviceForm.append('gate_id', gateId);
+      deviceForm.append('gate_type', gateType);
+      deviceForm.append('sensor', 'browser-camera-upload');
+      deviceForm.append('confidence', '0.25');
+      deviceForm.append('nearest_only', 'true');
+      deviceForm.append('authorize_gate', 'false');
+      await fetch(BASE + '/device/process-image', { method: 'POST', body: deviceForm });
     } else {
       addLog('[AUTOSCAN] Tidak ada plat terdeteksi pada frame ini.', 'warn');
     }
@@ -716,6 +727,7 @@ if (btnFileUpload && inputFileUpload) {
       fd.append('sensor', 'dashboard-upload');
       fd.append('confidence', '0.25');
       fd.append('nearest_only', 'true');
+      fd.append('authorize_gate', 'false');
 
       const res = await fetch(BASE + '/device/process-image', { method: 'POST', body: fd });
       if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -1761,7 +1773,8 @@ async function pollBackendHealth() {
   }
 }
 
-// Render one real gate event: photo + plate + status, then run the business pipeline.
+// Render one real gate event. ParkirBoss is the only authority for vehicle,
+// session, wallet, and physical-gate decisions; this dashboard is read-only.
 function handleDeviceEvent(ev) {
   const gateId = ev.gate_id || (ev.gate_type === 'exit' ? 'GATE-A-OUT' : 'GATE-A-IN');
   const plate = (ev.plate || '').trim();
@@ -1787,7 +1800,9 @@ function handleDeviceEvent(ev) {
   set('cam-gate-label', gateId);
   set('last-gate', gateId + ' (' + (ev.gate_type || '?') + ')');
   set('last-sensor', ev.sensor || '—');
-  set('last-decision', ev.decision || '—');
+  const gateAction = ev.gate_action || ev.command || '—';
+  const gateReason = ev.gate_reason || '—';
+  set('last-decision', gateAction);
   set('last-command', ev.command || '—');
   set('last-time', ev.ts ? new Date(ev.ts).toLocaleTimeString('id-ID') : '—');
   setSensorState('TERDETEKSI', 'active');
@@ -1796,15 +1811,19 @@ function handleDeviceEvent(ev) {
 
   const conf = ev.plate_confidence ? (ev.plate_confidence * 100).toFixed(1) + '%' : '–';
   addLog(`[SENSOR] ${ev.sensor || 'trigger'} @ ${gateId} → capture diterima dari ${ev.device_id || 'device'}`, 'info');
-  addLog(`[OCR] Plat: "${plate || '-'}" (conf ${conf}) · keputusan backend: ${ev.decision || '-'} / ${ev.command || '-'}`, plate ? 'success' : 'warn');
+  addLog(`[OCR] Plat: "${plate || '-'}" (conf ${conf}) · keputusan ParkirBoss: ${gateAction}`, plate ? 'success' : 'warn');
 
   if (!plate) {
-    addLog('[GATE] Plat tidak terbaca — MANUAL_REQUIRED.', 'warn');
+    addLog(`[GATE] ${gateReason}`, 'warn');
     return;
   }
-  // Drive the Parkir Boss pipeline (sesi/billing/saldo/app/admin) with the REAL plate.
-  // Deduped so continuous live auto-scan won't re-bill the same vehicle every tick.
-  maybeProcessGate(plate, gateId);
+
+  if (gateAction === 'OPEN_GATE') {
+    addLog(`[GATE] OPEN_GATE — ${gateReason}`, 'success');
+    triggerGateGateAnimation(gateId === 'GATE-A-IN');
+  } else {
+    addLog(`[GATE] ${gateAction} — ${gateReason}`, 'warn');
+  }
 }
 
 async function pollDeviceEvents() {

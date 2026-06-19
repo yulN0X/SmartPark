@@ -9,7 +9,7 @@ class ApiClient {
   // phone or the IoT/LAN demo, pass --dart-define with the laptop's LAN IP.
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://localhost:8080/api',
+    defaultValue: 'http://10.228.58.14:8080/api',
   );
 
   Future<String?> _getToken() async {

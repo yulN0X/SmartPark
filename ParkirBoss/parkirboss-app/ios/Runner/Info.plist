@@ -28,8 +28,6 @@
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<!-- Dev only: allow plain HTTP to the backend on localhost / LAN IP.
-		     Restrict or remove before shipping to production. -->
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>

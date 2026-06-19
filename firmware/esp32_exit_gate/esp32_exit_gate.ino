@@ -49,7 +49,7 @@ const char* WIFI_PASSWORD = "12345678";
 // SmartPark API — IP laptop/Raspberry Pi pada WiFi yang sama (TANPA "http://").
 // Cari IP laptop: macOS `ipconfig getifaddr en0` · Windows `ipconfig` · Linux `hostname -I`.
 // Jalankan backend dengan: uvicorn api.main:app --host 0.0.0.0 --port 8000
-const char* API_HOST = "10.161.143.249";
+const char* API_HOST = "10.228.58.14";
 const int   API_PORT = 8000;
 const char* API_PATH = "/device/process-image";
 
@@ -100,8 +100,8 @@ const int PIN_LED_ONBOARD   = 33;  // Onboard red LED (active LOW)
 // ─────────────────── THRESHOLDS ───────────────────
 const float  TRIGGER_DISTANCE_CM  = 30.0;   // Trigger saat objek < 30cm
 const unsigned long COOLDOWN_MS   = 10000;  // Min waktu antar trigger
-const int    GATE_OPEN_DEGREES    = 90;     // Sudut servo saat buka
-const int    GATE_CLOSED_DEGREES  = 0;      // Sudut servo saat tutup
+const int    GATE_OPEN_DEGREES    = 0;     // Sudut servo saat buka
+const int    GATE_CLOSED_DEGREES  = 90;      // Sudut servo saat tutup
 const unsigned long GATE_TIMEOUT_MS = 30000; // Fallback timeout jika IR sensor gagal
 const unsigned long IR_DEBOUNCE_MS  = 500;   // Debounce IR sensor
 const unsigned long API_TIMEOUT_MS   = 30000; // Timeout upload + response API
@@ -146,6 +146,14 @@ void setup() {
   gateServo.attach(PIN_SERVO);
   gateServo.write(GATE_CLOSED_DEGREES);
   Serial.println("Gate servo initialized (closed)");
+
+  // Self-test servo saat boot: buka lalu tutup sekali — verifikasi tanpa Serial Monitor.
+  Serial.println(">>> Servo self-test: OPEN -> CLOSE ...");
+  delay(600);
+  openGate();
+  delay(1000);
+  closeGate();
+  Serial.println(">>> Servo self-test selesai");
 
   connectWiFi();
   checkApiHealth();
@@ -225,11 +233,11 @@ bool initCamera() {
 
   // HYBRID needs 2 frame buffers (stream + capture/gate share the camera).
   if (psramFound()) {
-    config.frame_size   = FRAMESIZE_SVGA;     // 800x600 — balance stream vs plate detail
+    config.frame_size   = FRAMESIZE_VGA;      // 640x480 — stream lebih cepat, cukup buat ANPR
     config.jpeg_quality = 12;                 // 0-63, lower = better quality
     config.fb_count     = 2;
     config.fb_location  = CAMERA_FB_IN_PSRAM;
-    Serial.println("PSRAM found — SVGA 800x600, fb_count=2 (hybrid)");
+    Serial.println("PSRAM found — VGA 640x480, fb_count=2 (hybrid)");
   } else {
     config.frame_size   = FRAMESIZE_VGA;      // 640x480
     config.jpeg_quality = 15;
@@ -254,9 +262,9 @@ bool initCamera() {
       s->set_saturation(s, -2);
     } else {
       Serial.printf("Sensor PID: 0x%x (OV2640 or other)\n", s->id.PID);
-      s->set_vflip(s, 1);
+      s->set_vflip(s, 0);   // OV2640 tidak terpasang terbalik — jangan di-flip
     }
-    s->set_framesize(s, psramFound() ? FRAMESIZE_SVGA : FRAMESIZE_VGA);
+    s->set_framesize(s, FRAMESIZE_VGA);
     s->set_contrast(s, 1);
     s->set_sharpness(s, 1);
     s->set_whitebal(s, 1);
@@ -709,11 +717,16 @@ void handleAction(const String& action) {
 // ═══════════════════ GATE CONTROL ═══════════════════
 
 void openGate() {
-  Serial.println("=== GATE OPENING ===");
-  for (int angle = GATE_CLOSED_DEGREES; angle <= GATE_OPEN_DEGREES; angle += 2) {
+  Serial.printf("=== GATE OPENING: %d -> %d derajat ===\n", GATE_CLOSED_DEGREES, GATE_OPEN_DEGREES);
+  // Step adaptif: negatif (sudut menurun = searah jarum jam) kalau OPEN < CLOSED.
+  int step = (GATE_OPEN_DEGREES >= GATE_CLOSED_DEGREES) ? 2 : -2;
+  for (int angle = GATE_CLOSED_DEGREES;
+       step > 0 ? angle <= GATE_OPEN_DEGREES : angle >= GATE_OPEN_DEGREES;
+       angle += step) {
     gateServo.write(angle);
     delay(15);
   }
+  gateServo.write(GATE_OPEN_DEGREES);   // pastikan mendarat tepat di sudut buka
   gateIsOpen = true;
   gateOpenedAt = millis();
   vehiclePassingIR = false;
@@ -722,11 +735,15 @@ void openGate() {
 }
 
 void closeGate() {
-  Serial.println("=== GATE CLOSING ===");
-  for (int angle = GATE_OPEN_DEGREES; angle >= GATE_CLOSED_DEGREES; angle -= 2) {
+  Serial.printf("=== GATE CLOSING: %d -> %d derajat ===\n", GATE_OPEN_DEGREES, GATE_CLOSED_DEGREES);
+  int step = (GATE_CLOSED_DEGREES >= GATE_OPEN_DEGREES) ? 2 : -2;
+  for (int angle = GATE_OPEN_DEGREES;
+       step > 0 ? angle <= GATE_CLOSED_DEGREES : angle >= GATE_CLOSED_DEGREES;
+       angle += step) {
     gateServo.write(angle);
     delay(15);
   }
+  gateServo.write(GATE_CLOSED_DEGREES); // pastikan mendarat tepat di sudut tutup
   gateIsOpen = false;
   vehiclePassingIR = false;
   Serial.println("Gate closed. Waiting for next vehicle...\n");

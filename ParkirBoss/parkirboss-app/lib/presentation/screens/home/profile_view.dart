@@ -644,13 +644,10 @@ class _ProfileViewState extends State<ProfileView> {
                       children: [
                         const Icon(Icons.local_parking, size: 64, color: AppColors.primary),
                         const SizedBox(height: AppSpacing.md),
-                        Text(
-                          'PARKIR BOSS',
-                          style: AppTypography.headlineMedium.copyWith(
-                            fontWeight: FontWeight.w900,
-                            fontStyle: FontStyle.italic,
-                            letterSpacing: -1.0,
-                          ),
+                        Image.asset(
+                          'assets/images/parkirboss_logo_horizontal.png',
+                          height: 28,
+                          fit: BoxFit.contain,
                         ),
                         const SizedBox(height: AppSpacing.xs),
                         Text(

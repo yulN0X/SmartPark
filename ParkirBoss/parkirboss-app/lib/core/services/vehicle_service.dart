@@ -1,6 +1,13 @@
 import 'dart:convert';
 import '../network/api_client.dart';
 
+class VehicleSaveResult {
+  const VehicleSaveResult({required this.success, this.message});
+
+  final bool success;
+  final String? message;
+}
+
 class VehicleService {
   final ApiClient _apiClient = ApiClient();
 
@@ -18,7 +25,11 @@ class VehicleService {
     }
   }
 
-  Future<bool> addVehicle(String plateNumber, {String? color, String? brand}) async {
+  Future<VehicleSaveResult> addVehicle(
+    String plateNumber, {
+    String? color,
+    String? brand,
+  }) async {
     try {
       final body = <String, dynamic>{
         'plate_number': plateNumber,
@@ -27,10 +38,22 @@ class VehicleService {
       if (brand != null) body['brand'] = brand;
 
       final response = await _apiClient.post('/vehicles', body);
-      return response.statusCode == 200;
+      if (response.statusCode == 200) {
+        return const VehicleSaveResult(success: true);
+      }
+
+      final decoded = jsonDecode(response.body);
+      final detail = decoded is Map<String, dynamic> ? decoded['detail']?.toString() : null;
+      return VehicleSaveResult(
+        success: false,
+        message: detail ?? 'Server menolak penyimpanan kendaraan.',
+      );
     } catch (e) {
       print('Add vehicle error: $e');
-      return false;
+      return const VehicleSaveResult(
+        success: false,
+        message: 'Tidak dapat terhubung ke server ParkirBoss.',
+      );
     }
   }
 

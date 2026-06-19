@@ -90,7 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Container(
                         padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryContainer,
+                          color: Colors.white,
                           border: Border.all(
                             color: AppColors.onSurface,
                             width: 3.0,
@@ -102,10 +102,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ],
                         ),
-                        child: const Icon(
-                          Icons.local_parking,
-                          color: AppColors.onPrimaryContainer,
-                          size: 32,
+                        child: Image.asset(
+                          'assets/images/parkirboss_monogram.png',
+                          width: 32,
+                          height: 32,
                         ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
@@ -257,7 +257,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               text: 'CREATE ACCOUNT',
                               style: AppTypography.labelMedium.copyWith(
                                 color: AppColors.tertiary,
-                                decoration: TextDecoration.underline,
                               ),
                             ),
                           ],

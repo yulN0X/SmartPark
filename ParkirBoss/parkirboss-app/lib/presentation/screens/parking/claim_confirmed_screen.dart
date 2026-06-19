@@ -16,14 +16,10 @@ class ClaimConfirmedScreen extends StatelessWidget {
         elevation: 0,
         automaticallyImplyLeading: false, // Suppressed trailing actions for focused flow
         title: Center(
-          child: Text(
-            'PARKIR BOSS',
-            style: AppTypography.headlineMedium.copyWith(
-              fontWeight: FontWeight.w900,
-              fontStyle: FontStyle.italic,
-              color: AppColors.tertiary,
-              letterSpacing: -1,
-            ),
+          child: Image.asset(
+            'assets/images/parkirboss_logo_horizontal.png',
+            height: 28,
+            fit: BoxFit.contain,
           ),
         ),
         bottom: PreferredSize(

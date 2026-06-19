@@ -6,6 +6,8 @@ import 'package:parkirboss/presentation/screens/home/dashboard_view.dart';
 import 'package:parkirboss/presentation/screens/home/slot_map_view.dart';
 import 'package:parkirboss/presentation/screens/home/sessions_view.dart';
 import 'package:parkirboss/presentation/screens/home/profile_view.dart';
+import 'package:parkirboss/core/services/gps_service.dart';
+import 'package:parkirboss/core/services/notification_service.dart';
 
 /// Home screen with neo-brutalist bottom navigation bar.
 class HomeScreen extends StatefulWidget {
@@ -17,6 +19,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  final GpsService _gpsService = GpsService();
+  final NotificationService _notificationService = NotificationService();
 
   static const List<Widget> _pages = <Widget>[
     DashboardView(),
@@ -24,6 +28,22 @@ class _HomeScreenState extends State<HomeScreen> {
     SessionsView(),
     ProfileView(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _gpsService.startTracking();
+    _notificationService.initialize().then((_) {
+      _notificationService.startPolling();
+    });
+  }
+
+  @override
+  void dispose() {
+    _gpsService.stopTracking();
+    _notificationService.stopPolling();
+    super.dispose();
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -36,16 +56,10 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(
-          'PARKIR BOSS',
-          style: AppTypography.titleMedium.copyWith(
-            fontStyle: FontStyle.italic,
-            fontWeight: FontWeight.w900,
-            color: AppColors.primaryContainer,
-            shadows: const [
-              Shadow(color: AppColors.onSurface, offset: Offset(2, 2)),
-            ],
-          ),
+        title: Image.asset(
+          'assets/images/parkirboss_logo_horizontal.png',
+          height: 28,
+          fit: BoxFit.contain,
         ),
         backgroundColor: AppColors.surface,
         elevation: 0,

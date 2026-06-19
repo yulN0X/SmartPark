@@ -119,20 +119,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Logo text with gold drop-shadow
-          Text(
-            'PARKIR BOSS',
-            style: AppTypography.titleMedium.copyWith(
-              fontStyle: FontStyle.italic,
-              fontWeight: FontWeight.w900,
-              color: AppColors.primaryContainer,
-              shadows: const [
-                Shadow(
-                  color: AppColors.onSurface,
-                  offset: Offset(2, 2),
-                ),
-              ],
-            ),
+          Image.asset(
+            'assets/images/parkirboss_logo_horizontal.png',
+            height: 28,
+            fit: BoxFit.contain,
           ),
 
           // Skip button

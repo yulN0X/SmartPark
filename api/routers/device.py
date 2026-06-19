@@ -17,7 +17,8 @@ from pathlib import Path
 
 import anyio
 import cv2
-from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
+import requests
+from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile, Header
 
 from api.config import (
     CAPTURE_DIR,
@@ -90,6 +91,8 @@ def _emit_event(
     image_width: int,
     image_height: int,
     saved: bool,
+    gate_action: str | None = None,
+    gate_reason: str | None = None,
 ) -> dict:
     """Record one gate event for the dashboard to pick up on its next poll."""
     global _EVENT_SEQ
@@ -111,6 +114,11 @@ def _emit_event(
             "ocr_confidence": result.ocr_confidence if result else 0.0,
             "decision": result.access.decision if result else "DENIED",
             "command": command.action,
+            # `decision` is the local computer-vision score. These two fields
+            # are the authoritative ParkirBoss business decision and must be
+            # used for the physical gate/UI state.
+            "gate_action": gate_action or command.action,
+            "gate_reason": gate_reason or command.reason,
             "bbox": bbox,
             "image_width": image_width,
             "image_height": image_height,
@@ -167,6 +175,95 @@ def _build_command(gate_type: str, pipeline_response) -> DeviceCommand:
         gate_open_seconds=0.0,
         reason="Prototype exit verification failed; gate remains closed.",
     )
+
+
+def _default_device_secret(gate_type: str) -> str:
+    """Return the seeded device secret only for the local demo bridge."""
+    return (
+        "smartpark-entry-a-secret-2026"
+        if gate_type == "entry"
+        else "smartpark-exit-a-secret-2026"
+    )
+
+
+async def _request_parkirboss_gate_decision(
+    *,
+    device_id: str,
+    gate_id: str,
+    gate_type: str,
+    pipeline_response,
+    device_secret: str | None = None,
+) -> tuple[DeviceCommand, str]:
+    """Ask ParkirBoss to authorize the gate using its live vehicle/session DB.
+
+    ANPR runs in this SmartPark service, but vehicle registration, active
+    sessions, and wallet debits live in ParkirBoss. Keeping this callback in
+    every image source (upload, ESP32 scan, and sensor trigger) avoids a
+    second, browser-only database making a conflicting decision.
+    """
+    result = pipeline_response.results[0] if pipeline_response.results else None
+    plate = result.plate_text.strip() if result and result.plate_text else ""
+    confidence = result.plate_confidence if result else 0.0
+
+    if not plate:
+        return (
+            DeviceCommand(
+                action="KEEP_CLOSED",
+                gate_open_seconds=0.0,
+                reason="Plat tidak terbaca oleh ANPR.",
+            ),
+            "REVIEW",
+        )
+
+    base_url = os.environ.get("PARKIRBOSS_API_URL", "http://localhost:8080/api")
+    callback_url = f"{base_url.rstrip('/')}/device/event"
+    payload = {
+        "device_id": device_id,
+        "gate_id": gate_id,
+        "gate_type": gate_type,
+        "plate": plate,
+        "confidence": confidence,
+        "raw_ocr": plate,
+    }
+    headers = {
+        "Content-Type": "application/json",
+        "X-Device-Secret": device_secret or _default_device_secret(gate_type),
+    }
+
+    try:
+        response = await anyio.to_thread.run_sync(
+            lambda: requests.post(callback_url, json=payload, headers=headers, timeout=5)
+        )
+        if response.status_code != 200:
+            return (
+                DeviceCommand(
+                    action="KEEP_CLOSED",
+                    gate_open_seconds=0.0,
+                    reason=f"ParkirBoss callback HTTP error: {response.status_code}",
+                ),
+                "REJECTED",
+            )
+
+        decision = response.json()
+        action = str(decision.get("action", "REJECTED"))
+        reason = str(decision.get("reason") or decision.get("message") or "Diproses oleh ParkirBoss")
+        return (
+            DeviceCommand(
+                action="OPEN_GATE" if action == "OPEN_GATE" else "KEEP_CLOSED",
+                gate_open_seconds=DEVICE_GATE_OPEN_SECONDS if action == "OPEN_GATE" else 0.0,
+                reason=reason,
+            ),
+            action,
+        )
+    except requests.RequestException as exc:
+        return (
+            DeviceCommand(
+                action="KEEP_CLOSED",
+                gate_open_seconds=0.0,
+                reason=f"ParkirBoss callback communication error: {exc}",
+            ),
+            "REJECTED",
+        )
 
 
 def _capture_info(
@@ -351,7 +448,16 @@ async def scan_camera(
             )
         )
 
-        command = _build_command(gate_type, pipeline_response)
+        # Dashboard live scans are visual-only. They pull a frame from the
+        # ESP32, but cannot return an OPEN_GATE command to that ESP32's servo.
+        # Creating a real session here would leave a vehicle "inside" while
+        # the physical barrier remains closed.
+        command = DeviceCommand(
+            action="SCAN_ONLY",
+            gate_open_seconds=0.0,
+            reason="Visual scan only; waiting for the physical gate trigger.",
+        )
+        gate_action = "SCAN_ONLY"
         img_w, img_h = await anyio.to_thread.run_sync(_image_size, image_path)
         # Live-stream frames are not persisted (the dashboard shows the MJPEG feed);
         # the event still carries the bbox for the overlay.
@@ -366,6 +472,8 @@ async def scan_camera(
             image_width=img_w,
             image_height=img_h,
             saved=False,
+            gate_action=gate_action,
+            gate_reason=command.reason,
         )
 
         return ScanResponse(
@@ -417,7 +525,12 @@ async def trigger_device(request: DeviceTriggerRequest):
             )
         )
 
-        command = _build_command(request.gate_type, pipeline_response)
+        command, gate_action = await _request_parkirboss_gate_decision(
+            device_id=request.device_id,
+            gate_id=request.gate_id,
+            gate_type=request.gate_type,
+            pipeline_response=pipeline_response,
+        )
         img_w, img_h = await anyio.to_thread.run_sync(_image_size, capture.image_path)
         _emit_event(
             device_id=request.device_id,
@@ -430,6 +543,8 @@ async def trigger_device(request: DeviceTriggerRequest):
             image_width=img_w,
             image_height=img_h,
             saved=should_keep_capture,
+            gate_action=gate_action,
+            gate_reason=command.reason,
         )
 
         return _build_response(
@@ -472,6 +587,8 @@ async def process_device_image(
     registered_color: str = Form(""),
     confidence: float = Form(0.25),
     nearest_only: bool = Form(True),
+    authorize_gate: bool = Form(True),
+    x_device_secret: str | None = Header(None, alias="X-Device-Secret"),
 ):
     if gate_type not in {"entry", "exit"}:
         raise HTTPException(status_code=400, detail="gate_type must be entry or exit")
@@ -511,7 +628,21 @@ async def process_device_image(
             )
         )
 
-        command = _build_command(gate_type, pipeline_response)
+        if authorize_gate:
+            command, gate_action = await _request_parkirboss_gate_decision(
+                device_id=device_id,
+                gate_id=gate_id,
+                gate_type=gate_type,
+                pipeline_response=pipeline_response,
+                device_secret=x_device_secret,
+            )
+        else:
+            command = DeviceCommand(
+                action="SCAN_ONLY",
+                gate_open_seconds=0.0,
+                reason="Visual upload only; no session or gate command was requested.",
+            )
+            gate_action = "SCAN_ONLY"
         img_w, img_h = await anyio.to_thread.run_sync(_image_size, image_path)
         _emit_event(
             device_id=device_id,
@@ -524,6 +655,8 @@ async def process_device_image(
             image_width=img_w,
             image_height=img_h,
             saved=should_keep_capture,
+            gate_action=gate_action,
+            gate_reason=command.reason,
         )
 
         return _build_response(

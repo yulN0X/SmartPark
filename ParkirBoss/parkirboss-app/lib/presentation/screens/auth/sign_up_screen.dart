@@ -73,61 +73,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       body: SafeArea(
         child: Stack(
           children: [
-            // ─── Background Accents ─────────────────────────────────
-            Positioned(
-              top: 40,
-              left: 40,
-              child: Opacity(
-                opacity: 0.5,
-                child: Text(
-                  'SYS.AUTH.01',
-                  style: AppTypography.labelSmall.copyWith(
-                    color: AppColors.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: 40,
-              right: 40,
-              child: Opacity(
-                opacity: 0.5,
-                child: Text(
-                  'GRID_LOCK://SECURE',
-                  style: AppTypography.labelSmall.copyWith(
-                    color: AppColors.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              top: 0,
-              right: 0,
-              child: Container(
-                width: 128,
-                height: 128,
-                decoration: const BoxDecoration(
-                  border: Border(
-                    left: BorderSide(color: AppColors.onBackground, width: AppSpacing.borderMedium),
-                    bottom: BorderSide(color: AppColors.onBackground, width: AppSpacing.borderMedium),
-                  ),
-                ),
-              ).withOpacity(0.1),
-            ),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              child: Container(
-                width: 128,
-                height: 128,
-                decoration: const BoxDecoration(
-                  border: Border(
-                    right: BorderSide(color: AppColors.onBackground, width: AppSpacing.borderMedium),
-                    top: BorderSide(color: AppColors.onBackground, width: AppSpacing.borderMedium),
-                  ),
-                ),
-              ).withOpacity(0.1),
-            ),
+
 
             // ─── Main Content ───────────────────────────────────────
             Center(
@@ -152,8 +98,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   child: Stack(
                     children: [
-                      // Crosshair Corners
-                      _buildCrosshairs(),
+
                       
                       Column(
                         mainAxisSize: MainAxisSize.min,
@@ -164,7 +109,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             height: 96,
                             margin: const EdgeInsets.only(bottom: AppSpacing.md),
                             decoration: BoxDecoration(
-                              color: AppColors.tertiaryContainer,
+                              color: Colors.white,
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: AppColors.onBackground,
@@ -178,11 +123,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               ],
                             ),
                             child: Center(
-                              child: Text(
-                                'P',
-                                style: AppTypography.displayLarge.copyWith(
-                                  color: AppColors.onTertiaryContainer,
-                                ),
+                              child: Image.asset(
+                                'assets/images/parkirboss_monogram.png',
+                                width: 48,
+                                height: 48,
                               ),
                             ),
                           ),
@@ -302,8 +246,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 textAlign: TextAlign.center,
                                 style: AppTypography.labelMedium.copyWith(
                                   color: AppColors.tertiary,
-                                  decoration: TextDecoration.underline,
-                                  decorationThickness: 4,
                                 ),
                               ),
                             ),

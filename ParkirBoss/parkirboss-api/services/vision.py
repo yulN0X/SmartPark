@@ -12,9 +12,25 @@ from pathlib import Path
 from ultralytics import YOLO
 import easyocr
 
+from services.plate import normalize_plate
+
 # ── Model paths ──────────────────────────────────────────────────────
-MODEL_DIR = Path(__file__).resolve().parent.parent.parent / "models"
-YOLO_WEIGHTS = MODEL_DIR / "best.pt"
+# Search order: YOLO_MODEL_PATH env → ./models/best.pt → SmartPark root
+_CANDIDATES = [
+    Path(os.environ.get("YOLO_MODEL_PATH", "")),                       # explicit env
+    Path(__file__).resolve().parent.parent / "models" / "best.pt",      # parkirboss-api/models/
+    Path(__file__).resolve().parent.parent.parent / "models" / "best.pt", # ParkirBoss/models/
+    Path(__file__).resolve().parent.parent.parent.parent / "models" / "best.pt",  # SmartPark/models/
+]
+YOLO_WEIGHTS: Path | None = None
+for _p in _CANDIDATES:
+    if _p and _p.is_file():
+        YOLO_WEIGHTS = _p
+        break
+if YOLO_WEIGHTS:
+    print(f"[VISION] Model found: {YOLO_WEIGHTS}")
+else:
+    print(f"[VISION] WARNING: No YOLO model found. Searched: {[str(p) for p in _CANDIDATES if str(p)]}")
 
 # ── Lazy-loaded singletons ───────────────────────────────────────────
 _yolo_model = None
@@ -24,6 +40,11 @@ _ocr_reader = None
 def _get_yolo():
     global _yolo_model
     if _yolo_model is None:
+        if YOLO_WEIGHTS is None:
+            raise RuntimeError(
+                "YOLO model not found. Set YOLO_MODEL_PATH env var or place "
+                "best.pt in the models/ directory."
+            )
         print(f"[VISION] Loading YOLOv8 from {YOLO_WEIGHTS}")
         _yolo_model = YOLO(str(YOLO_WEIGHTS))
     return _yolo_model
@@ -58,15 +79,16 @@ def _preprocess_plate(crop: np.ndarray) -> np.ndarray:
 
 def _clean_plate_text(raw: str) -> str:
     """
-    Normalise raw OCR output into a clean Indonesian plate format.
-    Typical format: B 1234 ABC
+    Normalise raw OCR output into a canonical Indonesian plate format.
+    Delegates to the shared ``normalize_plate()`` function so every
+    component in the system uses the exact same logic.
     """
+    # Light pre-clean: remove OCR artefacts but keep alphanumerics
     text = raw.upper().strip()
-    # Remove unwanted chars — keep letters, digits, spaces
     text = re.sub(r"[^A-Z0-9 ]", "", text)
-    # Collapse multiple spaces
     text = re.sub(r"\s+", " ", text).strip()
-    return text
+    # Canonical normalization (strips spaces → "B1234ABC")
+    return normalize_plate(text)
 
 
 # ── Public API ───────────────────────────────────────────────────────
